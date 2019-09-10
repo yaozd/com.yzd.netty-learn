@@ -11,6 +11,7 @@
     <modules>
         <module>netty-http-server</module>
         <module>netty-proxy</module>
+        <module>NettyGateway</module>
     </modules>
 
 </project>
