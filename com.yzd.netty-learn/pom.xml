@@ -14,6 +14,11 @@
         <module>NettyGateway</module>
         <module>netty-server-client</module>
         <module>netty-reconnect</module>
+        <module>Netty-heartbeat</module>
+        <module>Netty-httpServer</module>
+        <module>Netty-protobuf</module>
+        <module>Netty-slidingWindow</module>
+        <module>Netty-unpack</module>
     </modules>
 
 </project>
