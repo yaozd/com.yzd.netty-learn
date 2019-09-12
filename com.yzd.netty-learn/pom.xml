@@ -12,6 +12,8 @@
         <module>netty-http-server</module>
         <module>netty-proxy</module>
         <module>NettyGateway</module>
+        <module>netty-server-client</module>
+        <module>netty-reconnect</module>
     </modules>
 
 </project>
