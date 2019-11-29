@@ -2,7 +2,7 @@ package com.example.demo.httpserver;
 
 public class Main {
     public static void main(String[] args) {
-        NettyHttpServer server = new NettyHttpServer(8080);
+        NettyHttpServer server = new NettyHttpServer(8085);
 
         try {
             server.init();

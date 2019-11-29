@@ -20,6 +20,7 @@
         <module>Netty-slidingWindow</module>
         <module>Netty-unpack</module>
         <module>netty-handler</module>
+        <module>netty-http-client</module>
     </modules>
 
 </project>

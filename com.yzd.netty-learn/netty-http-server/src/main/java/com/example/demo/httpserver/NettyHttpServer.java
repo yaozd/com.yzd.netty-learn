@@ -50,7 +50,9 @@ public class NettyHttpServer {
                             // 解决大码流的问题，ChunkedWriteHandler：向客户端发送HTML5文件
                             socketChannel.pipeline().addLast("http-chunked", new ChunkedWriteHandler());
                             // 自定义处理handler
-                            socketChannel.pipeline().addLast("http-server", new NettyHttpServerHandler());
+                            //socketChannel.pipeline().addLast("http-server", new NettyHttpServerHandler());
+                            // 自定义处理handler：请求挂起，测试Handler，可以查看inboundHandler的处理的生命周期
+                            socketChannel.pipeline().addLast("http-server", new NettyHttpServerHandlerForHyperspacePendingBug());
                         }
                     });
 
