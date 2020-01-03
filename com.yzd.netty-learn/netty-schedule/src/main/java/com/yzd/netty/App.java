@@ -13,6 +13,9 @@ public class App {
     /**
      * Netty定时任务调度
      * <p>
+     * Netty利用EventLoop实现调度任务执行
+     * https://www.w3cschool.cn/essential_netty_in_action/essential_netty_in_action-pwme28eu.html
+     * <p>
      * netty
      * 线程池之 newScheduledThreadPool中scheduleAtFixedRate（四个参数）
      * https://blog.csdn.net/weixin_35756522/article/details/81707276
