@@ -21,6 +21,13 @@
         <module>Netty-unpack</module>
         <module>netty-handler</module>
         <module>netty-http-client</module>
+        <module>netty-schedule</module>
     </modules>
-
+    <dependencies>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-core</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+    </dependencies>
 </project>
