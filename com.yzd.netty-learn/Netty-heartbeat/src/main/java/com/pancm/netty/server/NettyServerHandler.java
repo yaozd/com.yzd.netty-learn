@@ -5,6 +5,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * 
 * Title: HelloServerHandler
@@ -54,7 +56,13 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
             ctx.flush();  
         }  
         count++;
-    }  
+    }
+    static AtomicInteger iii=new AtomicInteger(0);
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("========="+iii.incrementAndGet());
+        super.channelReadComplete(ctx);
+    }
 
     /**
      * 异常处理

@@ -23,6 +23,7 @@
         <module>netty-http-client</module>
         <module>netty-schedule</module>
         <module>netty-listener</module>
+        <module>netty-releaseData</module>
     </modules>
     <dependencies>
         <dependency>

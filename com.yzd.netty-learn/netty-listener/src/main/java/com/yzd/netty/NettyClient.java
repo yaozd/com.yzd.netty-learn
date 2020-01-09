@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class NettyClient {
 
     public static String host = "127.0.0.1";  //ip地址
-    public static int port = 9876;          //端口
+    public static int port = 8081;          //端口
     /// 通过nio方式来接收连接和处理连接   
     private static EventLoopGroup group = new NioEventLoopGroup();
     private static Bootstrap b = new Bootstrap();
@@ -39,6 +39,10 @@ public class NettyClient {
         b.group(group);
         b.channel(NioSocketChannel.class);
         b.handler(new NettyClientFilter());
+        for (int i = 0; i < 1000; i++) {
+            // 连接服务端
+            b.connect(host, port).addListener(new ConnectFutureListener("this is listener"));
+        }
         // 连接服务端
         b.connect(host, port).addListener(new ConnectFutureListener("this is listener"));
     }
@@ -54,6 +58,7 @@ public class NettyClient {
 
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
+            System.out.println("===========connect");
             Channel newChannel = future.channel();
             if (!future.isSuccess()) {
                 System.out.println("连接失败");
