@@ -18,6 +18,7 @@ GlobalTrafficShapingHandler : 全局级别的
 - [Netty高级功能（一）：流控和流量整形](https://www.jianshu.com/p/6c4a7cbbe2b5)
 - [Netty流量整形能解决内存泄漏问题吗](https://www.sohu.com/a/144188030_684743)
 - [Netty 中的流控与统计](https://emacsist.github.io/2018/04/26/netty-%E4%B8%AD%E7%9A%84%E6%B5%81%E6%8E%A7%E4%B8%8E%E7%BB%9F%E8%AE%A1/) -含代码
+- [Calculation of written and read bytes in netty application](https://stackoverflow.com/questions/31771800/calculation-of-written-and-read-bytes-in-netty-application)
 - []()
 
 ## Netty 流量相关的包
