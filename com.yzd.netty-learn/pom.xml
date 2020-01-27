@@ -29,6 +29,8 @@
         <module>netty-attribute</module>
         <module>01-netty-life-cycle</module>
         <module>02-netty-WaterMark</module>
+        <module>03-netty-sharable</module>
+        <module>04-netty-trafficshaping</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

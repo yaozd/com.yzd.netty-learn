@@ -12,11 +12,14 @@ import io.netty.util.ReferenceCountUtil;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static io.netty.channel.ChannelOption.WRITE_BUFFER_WATER_MARK;
+
 /**
  * @Author: yaozh
  * @Description:
  */
 public class LoadRunnerClient {
+    final static int M = 1024 * 1024;
     static final String HOST = System.getProperty("host", "127.0.0.1");
     static final int PORT = Integer.parseInt(System.getProperty("port", "8080"));
 
@@ -28,8 +31,9 @@ public class LoadRunnerClient {
             b.group(group)
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.TCP_NODELAY, true)
-                    //设置请求的高水位
+                    //设置请求的高水位 10M
                     .option(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 10 * 1024 * 1024)
+                    //.option(WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(30 * M, 50 * M))
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
