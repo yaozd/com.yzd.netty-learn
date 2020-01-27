@@ -54,3 +54,13 @@
 
 ## Netty源码工程
 - [Netty的线程模型, 调优 及 献上写过注释的源码工程](https://www.cnblogs.com/ZhuChangwu/p/12011096.html)
+
+## sharable 使用场景：
+```
+@sharable注解表明这个handler可以在多线程环境下使用， 当你自己写了一个非线程安全的handler， 不要去sharable， 否则自毁长城）
+应该是一个关于连接无状态的，比如，对于拆包沾包handler，每个连接都应该有一个自己的对象，故不能在各连接复用一个这样的Sharable的handler
+场景：     
+1. 通常无状态的handler都是可以用这个标记的， 那么只需要存在一个handler instance， 减少资源开销      
+2. 如你想对global的一些数据搞点事情， 那么就可以用这个了， 比如对ip的限制-UniqueIpFilter
+3. 如果你需要全局统计一些信息，比如所有连接报错次数（exceptionCaught）等 PS:所有连接,则是无状态的
+```

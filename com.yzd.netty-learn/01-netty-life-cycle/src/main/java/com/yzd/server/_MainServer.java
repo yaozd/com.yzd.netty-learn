@@ -5,6 +5,8 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 
 /**
  * @Author: yaozh
@@ -19,6 +21,8 @@ public class _MainServer {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
+                    //通过loggingHandler可以更好的分析channel的生命周期
+                    .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new MyChannelInitializer());
             ChannelFuture future = serverBootstrap.bind(PORT).sync();
             System.out.println("服务端启动成功,端口是:"+PORT);
