@@ -31,6 +31,7 @@
         <module>02-netty-WaterMark</module>
         <module>03-netty-sharable</module>
         <module>04-netty-trafficshaping</module>
+        <module>05-netty-websocket</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
