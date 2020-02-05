@@ -32,6 +32,7 @@
         <module>03-netty-sharable</module>
         <module>04-netty-trafficshaping</module>
         <module>05-netty-websocket</module>
+        <module>06-netty-tcp-client</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -48,6 +49,11 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>${netty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
         </dependency>
     </dependencies>
     <repositories>
