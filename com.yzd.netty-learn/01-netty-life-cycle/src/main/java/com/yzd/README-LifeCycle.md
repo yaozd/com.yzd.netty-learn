@@ -37,3 +37,26 @@
     3. handlerRemoved()：最后将所有逻辑处理器都移除完毕后回调该方法。
     从handlerAdded()方法回调，到handlerRemoved()方法回调，就是一个完整的ChannelHandler的生命周期。
     ```
+
+##　netty 处理远程主机强制关闭一个连接
+- [netty 处理远程主机强制关闭一个连接](https://blog.csdn.net/weixin_34146410/article/details/92556344)
+```
+    //AllowHalfClosure:判断是否开启连接半关闭的功能
+    //一个连接的远端关闭时本地端是否关闭
+    //值为:false时(PS:默认值)，连接自动关闭。
+    //值为:true时，触发 ChannelInboundHandler 的#userEventTriggered()方法，事件 ChannelInputShutdownEvent 。
+    //ch.config().setAllowHalfClosure(true);
+    //
+    System.out.println("channel isAllowHalfClosure:"+ch.config().isAllowHalfClosure());
+    -----------------------------------------------------------------------------------------------------
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        System.out.println("channel 用户事件触发-心跳检查：userEventTriggered()");
+        if (evt instanceof ChannelInputShutdownEvent) {
+            System.out.println("channel 用户事件触发-远程主机强制关闭连接:");
+            //远程主机强制关闭连接
+            //ctx.channel().close();
+        }
+        super.userEventTriggered(ctx, evt);
+    }
+```

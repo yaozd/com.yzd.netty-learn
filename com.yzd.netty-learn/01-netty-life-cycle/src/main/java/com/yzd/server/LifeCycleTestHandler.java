@@ -2,6 +2,7 @@ package com.yzd.server;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.socket.ChannelInputShutdownEvent;
 
 /**
  * @Author: yaozh
@@ -41,6 +42,7 @@ public class LifeCycleTestHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("channel 被关闭：channelInactive()");
+        System.out.println("channel 被关闭：channelInactive()-ctx.channel().isActive()"+ctx.channel().isActive());
         super.channelInactive(ctx);
     }
 
@@ -55,12 +57,15 @@ public class LifeCycleTestHandler extends ChannelInboundHandlerAdapter {
         System.out.println("逻辑处理器被移除：handlerRemoved()");
         super.handlerRemoved(ctx);
     }
+
     //===========================================================
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        System.out.println("channel 发生异常：exceptionCaught()-ctx.channel().isActive():"+ctx.channel().isActive());
         System.out.println("channel 发生异常：exceptionCaught()");
         super.exceptionCaught(ctx, cause);
     }
+
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
         System.out.println("channel 可写更改-高低水位线:channelWritabilityChanged()");
@@ -72,14 +77,20 @@ public class LifeCycleTestHandler extends ChannelInboundHandlerAdapter {
      * 使用场景：
      * 心跳检查
      * 如果读通道处于空闲状态，说明没有接收到心跳命令
+     *
      * @param ctx
      * @param evt
      * @throws Exception
      */
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        System.out.println(" channel 用户事件触发-心跳检查：userEventTriggered()");
+        System.out.println("channel 用户事件触发-心跳检查：userEventTriggered()");
+        if (evt instanceof ChannelInputShutdownEvent) {
+            System.out.println("channel 用户事件触发-远程主机强制关闭连接:");
+            //远程主机强制关闭连接
+            System.out.println("远程主机强制关闭连接后，手动关闭当前连接");
+            ctx.channel().close();
+        }
         super.userEventTriggered(ctx, evt);
-
     }
 }
