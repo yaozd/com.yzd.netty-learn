@@ -34,6 +34,7 @@
         <module>05-netty-websocket</module>
         <module>06-netty-tcp-client</module>
         <module>07-netty-common</module>
+        <module>08-netty-http2server</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
