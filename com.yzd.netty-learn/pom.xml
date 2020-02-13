@@ -33,6 +33,7 @@
         <module>04-netty-trafficshaping</module>
         <module>05-netty-websocket</module>
         <module>06-netty-tcp-client</module>
+        <module>07-netty-common</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
