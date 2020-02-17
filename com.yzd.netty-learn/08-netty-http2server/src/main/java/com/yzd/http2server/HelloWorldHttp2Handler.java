@@ -15,6 +15,8 @@
 
 package com.yzd.http2server;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
@@ -32,6 +34,9 @@ import io.netty.handler.codec.http2.Http2FrameListener;
 import io.netty.handler.codec.http2.Http2Headers;
 import io.netty.handler.codec.http2.Http2Settings;
 import io.netty.util.CharsetUtil;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
 
 import static io.netty.buffer.Unpooled.copiedBuffer;
 import static io.netty.buffer.Unpooled.unreleasableBuffer;
@@ -86,18 +91,8 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
      * Sends a "Hello World" DATA frame to the client.
      */
     private void sendResponse(ChannelHandlerContext ctx, int streamId, ByteBuf payload) {
-        //
-        final byte[] array;
-        final int offset;
-        final int length = payload.readableBytes();
-        if (payload.hasArray()) {
-            array = payload.array();
-            offset = payload.arrayOffset() + payload.readerIndex();
-        } else {
-            array = new byte[length];
-            payload.getBytes(payload.readerIndex(), array, 0, length);
-            offset = 0;
-        }
+
+
         // Send a frame for the response status
         Http2Headers headers = new DefaultHttp2Headers().status(OK.codeAsText());
         encoder().writeHeaders(ctx, streamId, headers, 0, false, ctx.newPromise());
@@ -110,11 +105,63 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     public int onDataRead(ChannelHandlerContext ctx, int streamId, ByteBuf data, int padding, boolean endOfStream) {
         int processed = data.readableBytes() + padding;
         if (endOfStream) {
+            //解析protobuf的数据流
+            byte[] bytes = ByteBufUtil.getBytes(data);
+            byte[] newarray=new byte[bytes.length];
+            int n=0;
+            //删除第一行的空白行：\n\t 。暂时不知道为什么，只知道不删除是无法解析的。
+            for (int i = 0; i < bytes.length; i++) {
+                if(i<5){
+                    continue;
+                }
+                newarray[n]=bytes[i];
+                n++;
+            }
+            String t1 = new String(bytes, Charset.forName("utf-8"));
+            System.out.println("t1:"+t1);
+            String t2 = new String(newarray, Charset.forName("utf-8"));
+            System.out.println("t2:"+t2);
+            //protobuf进行反序列化获得字段值
+            CodedInputStream codedinputstream = CodedInputStream.newInstance(newarray);
+            boolean isEnd=false;
+            while (!isEnd){
+                try {
+                    int i = codedinputstream.readTag();
+                    System.out.println("tag id:"+i+";real tag id:"+ toRealTagId(i,2));
+                    Object obj=codedinputstream.readString();
+                    System.out.println("value:"+obj);
+                    if(i==0){break;}
+                }catch (InvalidProtocolBufferException e){
+                    /**
+                     * com.google.protobuf.InvalidProtocolBufferException:
+                     * Protocol message contained an invalid tag (zero)
+                     */
+                    isEnd=true;
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                    isEnd=true;
+                }
+            }
             sendResponse(ctx, streamId, data.retain());
         }
         return processed;
     }
 
+    /**
+     * 转为真实的tagId
+     * @param tagId
+     * @param tagType 值的类型：
+     *                string=2
+     *                int32=0
+     * @return
+     */
+    private int toRealTagId(int tagId, int tagType){
+        if(tagId==0){
+            throw new IllegalArgumentException("tag id = 0");
+        }
+        return (tagId-tagType)/8;
+    }
     @Override
     public void onHeadersRead(ChannelHandlerContext ctx, int streamId,
                               Http2Headers headers, int padding, boolean endOfStream) {
