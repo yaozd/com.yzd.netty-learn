@@ -1,9 +1,9 @@
 package com.yzd.resolve;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Resolver {
@@ -29,8 +29,8 @@ public class Resolver {
                 if (!isExistTaskInfo(taskInfo)) {
                     continue;
                 }
-                System.out.println("watch:" + taskInfo.getReadAllUri());
-                Scheduler.doWork(taskInfo,taskInfo.getIntervalTime());
+                System.out.println("watch:" + taskInfo.getWatchUri());
+                Scheduler.doWork(taskInfo, taskInfo.getIntervalTime());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -48,7 +48,7 @@ public class Resolver {
                     continue;
                 }
                 System.out.println("read all:" + taskInfo.getReadAllUri());
-                Scheduler.doWorkReadAll(taskInfo,taskInfo.getIntervalTime());
+                Scheduler.doWorkReadAll(taskInfo, taskInfo.getIntervalTime());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -74,21 +74,29 @@ public class Resolver {
     /**
      * 空节点
      */
-    private final Node EMPTY_NODE=new Node("0.0.0.0",0);
+    private final Node EMPTY_NODE = new Node("0.0.0.0", 0);
     //
     BlockingQueue<TaskInfo> readAllUriQueue = new LinkedBlockingQueue<>();
     BlockingQueue<TaskInfo> watchUriQueue = new LinkedBlockingQueue<>();
     //
-    private Map<String, TaskInfo> tasksMap = new HashMap<String, TaskInfo>();
-    private Map<String, List<Node>> nodesMap = new HashMap<String, List<Node>>();
+    private Map<String, TaskInfo> tasksMap = new ConcurrentHashMap<String, TaskInfo>();
+    private Map<String, List<Node>> nodesMap = new ConcurrentHashMap<String, List<Node>>();
 
     public void addTask(TaskInfo taskInfo) {
         tasksMap.put(taskInfo.getKey(), taskInfo);
-        readAllUriQueue.add(taskInfo);
-        watchUriQueue.add(taskInfo);
+        addReadAllUriQueue(taskInfo);
+        addWatchUriQueue(taskInfo);
     }
 
     public void addNode(String key, List<Node> nodes) {
         nodesMap.put(key, nodes);
+    }
+
+    public void addReadAllUriQueue(TaskInfo taskInfo) {
+        readAllUriQueue.add(taskInfo);
+    }
+
+    public void addWatchUriQueue(TaskInfo taskInfo) {
+        watchUriQueue.add(taskInfo);
     }
 }

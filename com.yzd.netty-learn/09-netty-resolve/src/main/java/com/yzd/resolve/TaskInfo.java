@@ -1,6 +1,7 @@
 package com.yzd.resolve;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 public class TaskInfo {
@@ -24,9 +25,25 @@ public class TaskInfo {
     public TaskInfo(String key, URI uri) {
         this.key = key;
         this.uri = uri;
-        this.readAllUri = uri;
-        this.watchUri = uri;
+        this.readAllUri = toReadAllUri(uri);
+        this.watchUri = toWatchUri(uri);
         this.uuid = UUID.randomUUID().toString();
+    }
+
+    private URI toWatchUri(URI uri) {
+        return newUri("http://www.watch.com:80");
+    }
+
+    private URI toReadAllUri(URI uri) {
+        return newUri("http://wwww.read.all.com:80");
+    }
+
+    private URI newUri(String str) {
+        try {
+            return new URI(str);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("create uri exception!",e);
+        }
     }
 
     public URI getReadAllUri() {

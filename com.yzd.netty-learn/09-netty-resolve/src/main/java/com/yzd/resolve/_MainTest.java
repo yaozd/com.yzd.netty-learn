@@ -20,6 +20,6 @@ public class _MainTest {
             Scheduler.doWork(key,taskInfo,1);
         }
         Scheduler.doWork(key,taskInfo,1);*/
-        System.in.read();
+        //System.in.read();
     }
 }
