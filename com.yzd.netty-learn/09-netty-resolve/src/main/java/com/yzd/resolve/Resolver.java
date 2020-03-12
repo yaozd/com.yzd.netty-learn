@@ -1,5 +1,10 @@
 package com.yzd.resolve;
 
+import com.yzd.resolve.data.Node;
+import com.yzd.resolve.data.RequestData;
+import com.yzd.resolve.data.RequestType;
+import com.yzd.resolve.data.TaskInfo;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -13,42 +18,18 @@ public class Resolver {
         return ourInstance;
     }
 
-    //
     private Resolver() {
-        new Thread(() -> sendReadAllRequest()).start();
-        new Thread(() -> sendWatchRequest()).start();
+        new ResolverThreadFactory().newThread(() -> ListenRequestDataQueue()).start();
     }
 
-    /**
-     * 发送监听请求
-     */
-    private void sendWatchRequest() {
+    private void ListenRequestDataQueue() {
         while (true) {
             try {
-                TaskInfo taskInfo = watchUriQueue.take();
-                if (!isExistTaskInfo(taskInfo)) {
+                RequestData requestData = requestDataQueue.take();
+                if (!isExistTaskInfo(requestData.getTaskInfo())) {
                     continue;
                 }
-                System.out.println("watch:" + taskInfo.getWatchUri());
-                Scheduler.doWork(taskInfo, taskInfo.getIntervalTime());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * 发送拉取全部节点信息请求
-     */
-    private void sendReadAllRequest() {
-        while (true) {
-            try {
-                TaskInfo taskInfo = readAllUriQueue.take();
-                if (!isExistTaskInfo(taskInfo)) {
-                    continue;
-                }
-                System.out.println("read all:" + taskInfo.getReadAllUri());
-                Scheduler.doWorkReadAll(taskInfo, taskInfo.getIntervalTime());
+                ResolverScheduler.doWork(requestData);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -60,7 +41,7 @@ public class Resolver {
      *
      * @param taskInfo
      */
-    private boolean isExistTaskInfo(TaskInfo taskInfo) {
+    public boolean isExistTaskInfo(TaskInfo taskInfo) {
         TaskInfo currentTaskInfo = tasksMap.get(taskInfo.getKey());
         if (currentTaskInfo == null) {
             return false;
@@ -75,28 +56,30 @@ public class Resolver {
      * 空节点
      */
     private final Node EMPTY_NODE = new Node("0.0.0.0", 0);
-    //
-    BlockingQueue<TaskInfo> readAllUriQueue = new LinkedBlockingQueue<>();
-    BlockingQueue<TaskInfo> watchUriQueue = new LinkedBlockingQueue<>();
-    //
+    BlockingQueue<RequestData> requestDataQueue = new LinkedBlockingQueue<>();
     private Map<String, TaskInfo> tasksMap = new ConcurrentHashMap<String, TaskInfo>();
     private Map<String, List<Node>> nodesMap = new ConcurrentHashMap<String, List<Node>>();
 
     public void addTask(TaskInfo taskInfo) {
         tasksMap.put(taskInfo.getKey(), taskInfo);
-        addReadAllUriQueue(taskInfo);
-        addWatchUriQueue(taskInfo);
+        addRequestDataQueue(new RequestData(taskInfo, RequestType.READ_ALL_URI));
+        addRequestDataQueue(new RequestData(taskInfo, RequestType.WATCH_URI));
     }
 
+    /**
+     *
+     * @param requestData
+     */
+    public void addRequestDataQueue(RequestData requestData) {
+        this.requestDataQueue.add(requestData);
+    }
+
+    /**
+     *
+     * @param key
+     * @param nodes
+     */
     public void addNode(String key, List<Node> nodes) {
         nodesMap.put(key, nodes);
-    }
-
-    public void addReadAllUriQueue(TaskInfo taskInfo) {
-        readAllUriQueue.add(taskInfo);
-    }
-
-    public void addWatchUriQueue(TaskInfo taskInfo) {
-        watchUriQueue.add(taskInfo);
     }
 }

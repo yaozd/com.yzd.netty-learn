@@ -1,10 +1,13 @@
 package com.yzd.client;
 
+import com.yzd.resolve.data.RequestData;
+import com.yzd.resolve.data.RequestType;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * @author: yaozhendong
@@ -16,7 +19,7 @@ public class RequestUtil {
     }
 
     public static DefaultFullHttpRequest getRequestPackage(URI uri) {
-        DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.toASCIIString());
+        DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getRawPath());
         // 构建http请求
         request.headers().set(HttpHeaderNames.HOST, uri.getHost());
         request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
@@ -31,7 +34,7 @@ public class RequestUtil {
      * @return
      */
     public static DefaultFullHttpRequest getRequestPackageForPostMethod(URI uri, String content) {
-        DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, uri.toASCIIString()
+        DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, uri.getRawPath()
                 , Unpooled.wrappedBuffer(getBytes(content, "UTF-8")));
         // 构建http请求
         request.headers().set(HttpHeaderNames.HOST, uri.getHost());
@@ -51,6 +54,29 @@ public class RequestUtil {
             return content.getBytes(charsetName);
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException(e);
+        }
+    }
+    public static URI getUri(RequestData requestData){
+        if(RequestType.RAW_URI.equals( requestData.getRequestType())){
+            return requestData.getTaskInfo().getUri();
+        }
+        if(RequestType.READ_ALL_URI.equals( requestData.getRequestType())){
+            return requestData.getTaskInfo().getReadAllUri();
+        }
+        if(RequestType.WATCH_URI.equals(requestData.getRequestType())){
+            return requestData.getTaskInfo().getWatchUri();
+        }
+        throw new IllegalArgumentException("not found type;type=" + requestData.getRequestType());
+    }
+    public static URI newUri(String str) {
+        try {
+            URI uri= new URI(str);
+            if(uri.getHost()==null){
+                throw new URISyntaxException(uri.toString(),"uri.getHost()==null");
+            }
+            return uri;
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e.getMessage(),e);
         }
     }
 }

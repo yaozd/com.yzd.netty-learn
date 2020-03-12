@@ -18,7 +18,7 @@ import java.net.URI;
  */
 public final class HttpSnoopClient {
 
-    static final String URL = System.getProperty("url", "https://www.baidu.com/s");
+    static final String URL = System.getProperty("url", "http://localhost:8090/sleep/watch-uri");
     static final String PARAM = "?wd=netty";
 
     public static void main(String[] args) throws Exception {

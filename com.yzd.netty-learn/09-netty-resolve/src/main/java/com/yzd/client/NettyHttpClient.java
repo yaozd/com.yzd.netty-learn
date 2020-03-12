@@ -1,8 +1,9 @@
 package com.yzd.client;
 
-import com.yzd.resolve.RequestTypeEnum;
+import com.yzd.resolve.data.RequestData;
+import com.yzd.resolve.data.RequestType;
 import com.yzd.resolve.Resolver;
-import com.yzd.resolve.TaskInfo;
+import com.yzd.resolve.data.TaskInfo;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -38,6 +39,8 @@ public class NettyHttpClient {
         b.group(workerGroup);
         b.channel(NioSocketChannel.class);
         b.option(ChannelOption.SO_KEEPALIVE, true);
+        //如果不设置超时，连接会一直占用本地线程，端口，连接客户端一多，会导致本地端口用尽及CPU压力
+        b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 2000);
         b.handler(new ChannelInitializer<SocketChannel>() {
             @Override
             public void initChannel(SocketChannel ch) throws Exception {
@@ -66,30 +69,17 @@ public class NettyHttpClient {
         return null;
     }
 
-    public void writeData(TaskInfo taskInfo, RequestTypeEnum type) {
-        URI uri = getUri(taskInfo, type);
+    public void writeData(RequestData requestData) {
+        URI uri = RequestUtil.getUri(requestData);
         // 连接服务端
-        b.connect(uri.getHost(), uri.getPort()).addListener(new ConnectFutureListener(taskInfo, type));
+        b.connect(uri.getHost(), uri.getPort()).addListener(new ConnectFutureListener(requestData));
     }
-
-    private static URI getUri(TaskInfo taskInfo, RequestTypeEnum type) {
-        if (RequestTypeEnum.READ_ALL_URI.equals(type)) {
-            return taskInfo.getReadAllUri();
-        }
-        if (RequestTypeEnum.WATCH_URI.equals(type)) {
-            return taskInfo.getWatchUri();
-        }
-        throw new IllegalArgumentException("not found type;type=" + type);
-    }
-
     private static class ConnectFutureListener implements GenericFutureListener<ChannelFuture> {
 
-        private final RequestTypeEnum requestType;
-        private final TaskInfo taskInfo;
+        private final RequestData requestData;
 
-        ConnectFutureListener(TaskInfo taskInfo, RequestTypeEnum requestType) {
-            this.taskInfo = taskInfo;
-            this.requestType = requestType;
+        ConnectFutureListener(RequestData requestData) {
+            this.requestData=requestData;
         }
 
         @Override
@@ -102,18 +92,15 @@ public class NettyHttpClient {
                     newChannel.flush().close();
                 }
                 //TODO 任务连接失败:+1
-                if(RequestTypeEnum.READ_ALL_URI.equals(requestType)){
-                    Resolver.getInstance().addReadAllUriQueue(taskInfo);
-                }
-                if(RequestTypeEnum.WATCH_URI.equals(requestType)){
-                    Resolver.getInstance().addWatchUriQueue(taskInfo);
-                }
+                requestData.incrementConnectionFail();
+                Resolver.getInstance().addRequestDataQueue(requestData);
                 return;
             }
             System.out.println("连接成功：触发监听操作！");
+            requestData.resetConnectionFail();
             HttpClientHandler httpClientHandler = (HttpClientHandler)newChannel.pipeline().get(HTTP_CLIENT_HANDLER_NAME);
-            httpClientHandler.attachStream(taskInfo,requestType);
-            URI uri=getUri(taskInfo,requestType);
+            httpClientHandler.attachStream(requestData);
+            URI uri = RequestUtil.getUri(requestData);
             newChannel.writeAndFlush(RequestUtil.getRequestPackage(uri));
         }
     }
