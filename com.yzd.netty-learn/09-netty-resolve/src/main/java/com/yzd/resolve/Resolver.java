@@ -29,6 +29,7 @@ public class Resolver {
                 if (!isExistTaskInfo(requestData.getTaskInfo())) {
                     continue;
                 }
+                setRequestUuidForReadAllRequestType(requestData);
                 ResolverScheduler.doWork(requestData);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -53,6 +54,22 @@ public class Resolver {
     }
 
     /**
+     * 为拉取所有节点数据类型的请求，设置当前任务的请求ID
+     * @param requestData
+     */
+    private void setRequestUuidForReadAllRequestType(RequestData requestData){
+        TaskInfo currentTaskInfo = tasksMap.get(requestData.getTaskInfo().getKey());
+        if(currentTaskInfo==null){
+            return;
+        }
+        if(RequestType.READ_ALL_URI.equals(requestData.getRequestType())
+        &&requestData.getTaskInfo().getUuid().equals(currentTaskInfo.getUuid()))
+        {
+            currentTaskInfo.setRequestUuid(requestData.getUuid());
+        }
+    }
+
+    /**
      * 空节点
      */
     private final Node EMPTY_NODE = new Node("0.0.0.0", 0);
@@ -67,7 +84,6 @@ public class Resolver {
     }
 
     /**
-     *
      * @param requestData
      */
     public void addRequestDataQueue(RequestData requestData) {
@@ -75,7 +91,6 @@ public class Resolver {
     }
 
     /**
-     *
      * @param key
      * @param nodes
      */

@@ -36,6 +36,9 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpObject> {
     @Override
     public void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
         resetIdleCounter();
+        //todo 如果当前包产生的丢包，就有可能出现解析失败，需要关闭连接重新发送请求
+
+        //
         if (msg instanceof FullHttpResponse) {
             System.out.println("this is the FullHttpResponse");
         }
@@ -64,7 +67,7 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpObject> {
         if (msg instanceof HttpContent) {
             HttpContent content = (HttpContent) msg;
 
-            System.err.print(content.content().toString(CharsetUtil.UTF_8));
+            System.err.println(content.content().toString(CharsetUtil.UTF_8));
             System.err.flush();
 
             if (content instanceof LastHttpContent) {
@@ -72,12 +75,14 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpObject> {
                 //ctx.close();
             }
         }
+        if (!Resolver.getInstance().isExistTaskInfo(requestData.getTaskInfo())) {
+            ctx.close();
+            return;
+        }
         if (RequestType.WATCH_URI.equals(requestData.getRequestType())) {
             Resolver.getInstance().addRequestDataQueue(new RequestData(requestData.getTaskInfo(), RequestType.READ_ALL_URI));
-            if (ctx.channel().isActive()&&Resolver.getInstance().isExistTaskInfo(requestData.getTaskInfo())) {
-                URI uri = RequestUtil.getUri(requestData);
-                ctx.channel().writeAndFlush(RequestUtil.getRequestPackage(uri));
-            }
+            URI uri = RequestUtil.getUri(requestData);
+            ctx.channel().writeAndFlush(RequestUtil.getRequestPackage(uri));
             return;
         }
         if (RequestType.READ_ALL_URI.equals(requestData.getRequestType())) {
@@ -100,7 +105,10 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpObject> {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("channel 被关闭：channelInactive()");
         if (RequestType.WATCH_URI.equals(requestData.getRequestType())) {
+            //添加监视URI
             Resolver.getInstance().addRequestDataQueue(requestData);
+            //重新拉取所有节点URI
+            Resolver.getInstance().addRequestDataQueue(new RequestData(requestData.getTaskInfo(), RequestType.READ_ALL_URI));
         }
         super.channelInactive(ctx);
     }
@@ -111,6 +119,18 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpObject> {
      */
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object obj) throws Exception {
+        if (!Resolver.getInstance().isExistTaskInfo(requestData.getTaskInfo())) {
+            System.err.println("当前任务已经不存在，task uuid:"+requestData.getTaskInfo().getUuid());
+            ctx.close();
+            return;
+        }
+        //如果10分钟内没有收到响应，则关闭当前channel，重新发起read-all-uri与watch-uri
+        //40秒
+        if(idleCounter>=10){
+            System.out.println("如果超过80秒，没有收到响应，则关闭当前连接！次数" + idleCounter);
+            ctx.close();
+            return;
+        }
         System.out.println("循环请求的时间：" + new Date() + "，次数" + idleCounter);
         if (obj instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) obj;

@@ -91,7 +91,7 @@ public class NettyHttpClient {
                 if (newChannel != null && newChannel.isOpen()) {
                     newChannel.flush().close();
                 }
-                //TODO 任务连接失败:+1
+                //TODO 任务连接失败:+1，就会频繁的建立连接。此时可通过任务连接次数增加任务调用的时间
                 requestData.incrementConnectionFail();
                 Resolver.getInstance().addRequestDataQueue(requestData);
                 return;

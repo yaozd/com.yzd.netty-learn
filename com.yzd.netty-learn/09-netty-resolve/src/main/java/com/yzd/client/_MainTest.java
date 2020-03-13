@@ -20,7 +20,7 @@ public class _MainTest {
     @Test
     public void writeData_Test() throws IOException {
         //URI serviceUri = RequestUtil.newUri("http://172.20.60.45:8081/demo");
-        URI serviceUri = RequestUtil.newUri("http://localhost:8090/sleep/watch-uri");
+        URI serviceUri = RequestUtil.newUri("http://localhost:8090/k8s/api");
         TaskInfo taskInfo=new TaskInfo("key-1",serviceUri);
         RequestData requestData=new RequestData(taskInfo, RequestType.RAW_URI);
         NettyHttpClient.getInstance().writeData(requestData);

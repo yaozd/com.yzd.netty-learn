@@ -30,6 +30,11 @@ public class TaskInfo {
      * 请求失败计数器，用于调整执行间隔时间
      */
     private int failCount=0;
+    /**
+     * 请求的唯一ID，解决响应延迟，产生的数据不一致
+     * PS：第二请求先于第一个请求响应
+     */
+    private String requestUuid;
 
     public TaskInfo(String key, URI uri) {
         this.key = key;
@@ -44,7 +49,7 @@ public class TaskInfo {
                 .append(uri.getScheme())
                 .append("://")
                 .append(uri.getAuthority())
-                .append("/sleep/watch-uri");
+                .append("/k8s/watch-uri");
         return newUri(sb.toString());
     }
 
@@ -53,7 +58,7 @@ public class TaskInfo {
                 .append(uri.getScheme())
                 .append("://")
                 .append(uri.getAuthority())
-                .append("/sleep/read-all-uri");
+                .append("/k8s/read-all-uri");
         return newUri(sb.toString());
     }
 
@@ -87,5 +92,13 @@ public class TaskInfo {
 
     public URI getUri() {
         return uri;
+    }
+
+    public String getRequestUuid() {
+        return requestUuid;
+    }
+
+    public void setRequestUuid(String requestUuid) {
+        this.requestUuid = requestUuid;
     }
 }
