@@ -72,7 +72,9 @@ public final class HttpSnoopClient {
             request.headers().set(HttpHeaders.Names.HOST, host);
             request.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
             request.headers().set(HttpHeaders.Names.ACCEPT_ENCODING, HttpHeaders.Values.GZIP);
-
+            //
+            request.headers().set("Authorization", "Bearer XXXXXX");
+            //
             // Set some example cookies.
             request.headers().set(
                     HttpHeaders.Names.COOKIE,

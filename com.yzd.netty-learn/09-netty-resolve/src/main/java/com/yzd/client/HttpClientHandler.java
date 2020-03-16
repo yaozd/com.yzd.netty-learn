@@ -8,6 +8,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.DecoderResult;
+import io.netty.handler.codec.DecoderResultProvider;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
@@ -37,7 +39,13 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpObject> {
     public void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
         resetIdleCounter();
         //todo 如果当前包产生的丢包，就有可能出现解析失败，需要关闭连接重新发送请求
-
+        if (msg instanceof DecoderResultProvider) {
+            DecoderResult decoderResult = ((DecoderResultProvider) msg).decoderResult();
+            if (decoderResult.isFailure()) {
+                System.out.println("解码失败");
+                return;
+            }
+        }
         //
         if (msg instanceof FullHttpResponse) {
             System.out.println("this is the FullHttpResponse");
@@ -120,13 +128,13 @@ public class HttpClientHandler extends SimpleChannelInboundHandler<HttpObject> {
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object obj) throws Exception {
         if (!Resolver.getInstance().isExistTaskInfo(requestData.getTaskInfo())) {
-            System.err.println("当前任务已经不存在，task uuid:"+requestData.getTaskInfo().getUuid());
+            System.err.println("当前任务已经不存在，task uuid:" + requestData.getTaskInfo().getUuid());
             ctx.close();
             return;
         }
         //如果10分钟内没有收到响应，则关闭当前channel，重新发起read-all-uri与watch-uri
         //40秒
-        if(idleCounter>=10){
+        if (idleCounter >= 10) {
             System.out.println("如果超过80秒，没有收到响应，则关闭当前连接！次数" + idleCounter);
             ctx.close();
             return;

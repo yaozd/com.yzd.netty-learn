@@ -19,11 +19,11 @@ public class RequestData {
     /**
      * 执行间隔时间，主要用于在请求地址不可用时，防止频繁发送请求使用
      */
-    private long intervalTime=0L;
+    private long intervalTime = 0L;
     /**
      * 请求失败计数器，用于调整执行间隔时间
      */
-    private int failCount=0;
+    private int failCount = 0;
     /**
      * 请求的唯一ID，解决响应延迟，产生的数据不一致
      * PS：第二请求先于第一个请求响应
@@ -35,6 +35,21 @@ public class RequestData {
     }
 
     public void resetConnectionFail() {
-        failCount=0;
+        failCount = 0;
+    }
+
+    /**
+     * 快速发送请求数据
+     */
+    private static final int FAST_SEND_REQUEST_DATA_COUNT = 10;
+
+    public long getIntervalTime() {
+        if (RequestType.WATCH_URI.equals(requestType)) {
+            return 1000;
+        }
+        if (failCount > FAST_SEND_REQUEST_DATA_COUNT) {
+            return 1000;
+        }
+        return this.intervalTime;
     }
 }
