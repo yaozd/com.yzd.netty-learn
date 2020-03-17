@@ -3,6 +3,8 @@ package com.allen.netty.proxy;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 
@@ -14,7 +16,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 public class NettyProxyServerHandler extends ChannelInboundHandlerAdapter {
 
     private String remoteHost = "127.0.0.1";
-    private int remotePort = 8081;
+    private int remotePort = 8090;
 
     private Channel outBoundChannel;
 
@@ -30,7 +32,16 @@ public class NettyProxyServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, final Object msg) throws Exception {
-
+        /**
+         * 重写uri
+         * rewrite ^/receipt/(.*)$  => /invoice/$1 permanent;
+         */
+        if (msg instanceof FullHttpRequest) {
+            System.out.println("this is the FullHttpRequest");
+            FullHttpRequest request=(FullHttpRequest)msg;
+            System.out.println("uri:"+request.getUri());
+            request.setUri("/rewrite/new-uri");
+        }
         if (outBoundChannel == null || !ctx.channel().isActive()) {
             /* 创建netty client,连接到远程地址 */
             Bootstrap bootstrap = new Bootstrap();
