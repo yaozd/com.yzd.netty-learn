@@ -36,6 +36,7 @@
         <module>07-netty-common</module>
         <module>08-netty-http2server</module>
         <module>09-netty-resolve</module>
+        <module>Netty-httpServer-Response</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
