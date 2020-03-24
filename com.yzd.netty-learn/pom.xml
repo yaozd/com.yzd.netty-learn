@@ -37,6 +37,7 @@
         <module>08-netty-http2server</module>
         <module>09-netty-resolve</module>
         <module>Netty-httpServer-Response</module>
+        <module>10-netty-opentracing</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
