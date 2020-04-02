@@ -1,6 +1,7 @@
 package com.yzd.netty.opentracing.sender;
 
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
+
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -26,12 +27,12 @@ public class OpentracingReporter {
     }
 
     public void report() {
-        CountDownLatch latch;
-        List<String> dataList = null;
+        //CountDownLatch latch;
+        //List<String> dataList = null;
         while (true) {
-            latch = new CountDownLatch(MAX_BATCH_SEND_COUNT);
+            CountDownLatch latch = new CountDownLatch(MAX_BATCH_SEND_COUNT);
             //
-            dataList = new ArrayList<String>(MAX_BATCH_SEND_COUNT);
+            List<String> dataList = Lists.newArrayListWithExpectedSize(MAX_BATCH_SEND_COUNT);
             try {
                 addData(dataList, latch);
             } catch (Exception e) {
@@ -47,6 +48,7 @@ public class OpentracingReporter {
             return;
         }
         try {
+            //todo send data
             System.out.println("send span data!" + dataList.get(MAX_BATCH_SEND_COUNT - 1));
         } catch (Exception ex) {
             //如果某一次发送出现异常！不影响其他
