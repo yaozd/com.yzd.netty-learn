@@ -8,6 +8,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author yaozh
+ */
 public class OpentracingReporter {
     private static OpentracingReporter ourInstance = new OpentracingReporter();
 
