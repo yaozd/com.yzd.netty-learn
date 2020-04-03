@@ -19,7 +19,7 @@ public class OpentracingReporter {
     }
 
     private BlockingQueue<String> spanDataQueue = new ArrayBlockingQueue<>(10000);
-    private static final int MAX_BATCH_SEND_COUNT = 10000;
+    private static final int MAX_BATCH_SEND_COUNT = 100;
     private static final int MAX_AWAIT_SECONDS = 3;
 
     public void save(String span) {
