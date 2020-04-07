@@ -41,12 +41,13 @@ public class OpentracingSender {
 
     private static final int MAX_FAST_CONNECTION_COUNT = 10;
     private static final int MAX_SEND_RETRY_COUNT = 2;
-    private EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private EventLoopGroup workerGroup = new NioEventLoopGroup(1);
     private Bootstrap b = new Bootstrap();
     private Channel channel;
     private int connectionFailCount = 0;
     private String url;
-    private CountDownLatch connectionAwaitLatch=new CountDownLatch(1);
+    private CountDownLatch connectionAwaitLatch = new CountDownLatch(1);
+
     private void init() {
         b.group(workerGroup);
         b.channel(NioSocketChannel.class);
@@ -71,22 +72,25 @@ public class OpentracingSender {
         b.handler(new OpentracingSendChannelInitializer(getSslContext(uri.getScheme())));
         b.connect(uri.getHost(), getPort(uri)).addListener(new ConnectFutureListener(this));
     }
-
+    public void reload(String url) throws Exception {
+        this.url=url;
+        connection();
+    }
     public void send() throws InterruptedException {
-        if(StringUtil.isNullOrEmpty(url)){
+        if (disable()) {
             return;
         }
         for (int i = 0; i < MAX_SEND_RETRY_COUNT; i++) {
-            if (isAvailable()) {
+            if (isAvailableChannel()) {
                 log.info("send span data");
                 channel.writeAndFlush("span data");
                 return;
             }
-            if(connectionFailCount>MAX_FAST_CONNECTION_COUNT){
+            if (connectionFailCount > MAX_FAST_CONNECTION_COUNT) {
                 log.error("fast fail!");
                 return;
             }
-            connectionAwaitLatch.await(2,TimeUnit.SECONDS);
+            connectionAwaitLatch.await(2, TimeUnit.SECONDS);
         }
     }
 
@@ -99,12 +103,18 @@ public class OpentracingSender {
         return uri;
     }
 
-    public boolean isAvailable() {
-        if (channel == null) {
-            connectionAwaitLatch=new CountDownLatch(1);
-            return false;
+    public boolean disable() {
+        return StringUtil.isNullOrEmpty(url);
+    }
+
+    public boolean isAvailableChannel() {
+        if (channel != null && channel.isActive() && channel.isWritable()) {
+            return true;
         }
-        return channel.isActive();
+        if (connectionAwaitLatch.getCount() == 0) {
+            connectionAwaitLatch = new CountDownLatch(1);
+        }
+        return false;
     }
 
     private int getPort(URI uri) {
@@ -136,6 +146,10 @@ public class OpentracingSender {
             return 3L;
         }
         return 0L;
+    }
+
+    public void connectionAwaitLatchCountDown() {
+        connectionAwaitLatch.countDown();
     }
 
     private static class ConnectFutureListener implements GenericFutureListener<ChannelFuture> {
@@ -178,7 +192,7 @@ public class OpentracingSender {
      * @throws SSLException
      */
     private SslContext getSslContext(String scheme) throws SSLException {
-        if (HttpScheme.HTTPS.toString().equalsIgnoreCase(scheme)) {
+        if (HttpScheme.HTTP.toString().equalsIgnoreCase(scheme)) {
             return null;
         }
         // 不验证SERVER

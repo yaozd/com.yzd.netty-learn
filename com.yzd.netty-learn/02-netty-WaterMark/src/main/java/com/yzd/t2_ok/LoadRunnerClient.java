@@ -110,5 +110,14 @@ public class LoadRunnerClient {
         cause.printStackTrace();
         ctx.close();
     }
+     @Override
+     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+         System.out.println("channel 可写更改-高低水位线:channelWritabilityChanged()");
+         if(!ctx.channel().isWritable()){
+             System.err.println("不可写");
+         }
+         super.channelWritabilityChanged(ctx);
+
+     }
 
 }

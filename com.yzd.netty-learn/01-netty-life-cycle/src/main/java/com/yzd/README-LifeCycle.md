@@ -60,3 +60,27 @@
         super.userEventTriggered(ctx, evt);
     }
 ```
+## [ChannelPipeline和ChannelHandler总述](https://www.cnblogs.com/549294286/p/10790899.html)-netty 事件总
+- 入站事件一般由I/O线程触发，以下事件为入站事件：
+```
+ChannelRegistered() // Channel注册到EventLoop
+ChannelActive()     // Channel激活
+ChannelRead(Object) // Channel读取到数据
+ChannelReadComplete()   // Channel读取数据完毕
+ExceptionCaught(Throwable)  // 捕获到异常
+UserEventTriggered(Object)  // 用户自定义事件
+ChannelWritabilityChanged() // Channnel可写性改变，由写高低水位控制
+ChannelInactive()   // Channel不再激活
+ChannelUnregistered()   // Channel从EventLoop中注销
+```
+- 出站事件一般由用户触发，以下事件为出站事件：
+```
+bind(SocketAddress, ChannelPromise) // 绑定到本地地址
+connect(SocketAddress, SocketAddress, ChannelPromise)   // 连接一个远端机器
+write(Object, ChannelPromise)   // 写数据，实际只加到Netty出站缓冲区
+flush() // flush数据，实际执行底层写
+read()  // 读数据，实际设置关心OP_READ事件，当数据到来时触发ChannelRead入站事件
+disconnect(ChannelPromise)  // 断开连接，NIO Server和Client不支持，实际调用close
+close(ChannelPromise)   // 关闭Channel
+deregister(ChannelPromise)  // 从EventLoop注销Channel
+```
