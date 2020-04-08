@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -50,6 +51,11 @@ public class OpentracingSender {
     private Channel channel;
     private int connectionFailCount = 0;
     private String url;
+    /**
+     * 配置版本，当reload的时候更新配置版本信息
+     *
+     */
+    private String version= UUID.randomUUID().toString();
     private CountDownLatch connectionAwaitLatch = new CountDownLatch(1);
 
     private void init() {
@@ -79,6 +85,7 @@ public class OpentracingSender {
 
     public void reload(String url) throws Exception {
         this.url = url;
+        this.version= UUID.randomUUID().toString();
         connection();
     }
 
@@ -168,6 +175,10 @@ public class OpentracingSender {
         connectionAwaitLatch.countDown();
     }
 
+    public String getVersion() {
+        return this.version;
+    }
+
     private static class ConnectFutureListener implements GenericFutureListener<ChannelFuture> {
 
         private final OpentracingSender opentracingSender;
@@ -213,5 +224,19 @@ public class OpentracingSender {
         }
         // 不验证SERVER
         return SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+    }
+
+    /**
+     * 心跳包-维持连接
+     *
+     * @return
+     */
+    public FullHttpRequest ping() {
+        if (StringUtil.isNullOrEmpty(url)) {
+            return null;
+        }
+        Map<String, String> header = new HashMap<>();
+        header.put(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
+        return HttpRequestUtil.createFullHttpRequest(createUri(url), HttpVersion.HTTP_1_1, HttpMethod.POST, header);
     }
 }
