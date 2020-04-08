@@ -2,6 +2,7 @@ package com.yzd.netty.opentracing.sender;
 
 import com.google.common.collect.Lists;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -22,7 +23,7 @@ public class OpentracingReporter {
     }
 
     private BlockingQueue<String> spanDataQueue = new ArrayBlockingQueue<>(10000);
-    private static final int MAX_BATCH_SEND_COUNT = 100;
+    private static final int MAX_BATCH_SEND_COUNT = 7;
     private static final int MAX_AWAIT_SECONDS = 3;
 
     public void save(String span) {
@@ -52,7 +53,8 @@ public class OpentracingReporter {
         }
         try {
             //todo send data
-            System.out.println("send span data!" + dataList.get(MAX_BATCH_SEND_COUNT - 1));
+            System.out.println(dataListToJson(dataList)+new Date());
+            //System.out.println(dataListToJson(dataList) + dataList.get(MAX_BATCH_SEND_COUNT - 1));
         } catch (Exception ex) {
             //如果某一次发送出现异常！不影响其他
             ex.printStackTrace();
@@ -69,5 +71,18 @@ public class OpentracingReporter {
             latch.countDown();
             dataList.add(result);
         }
+    }
+    private String dataListToJson(List<String> dataList) {
+        StringBuilder json = new StringBuilder();
+        int size = dataList.size();
+        json.append("[");
+        for (int i = 0; i < size; i++) {
+            json.append(dataList.get(i));
+            if(i<size-1){
+                json.append(",");
+            }
+        }
+        json.append("]");
+        return json.toString();
     }
 }

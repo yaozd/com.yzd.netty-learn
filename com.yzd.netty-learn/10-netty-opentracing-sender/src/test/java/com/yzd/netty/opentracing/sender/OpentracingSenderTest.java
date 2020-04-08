@@ -16,7 +16,8 @@ public class OpentracingSenderTest {
     @Test
     public void client() throws Exception {
         //String url = "http://www.baidu.com";
-        String url = "http://127.0.0.1:8888";
+        //String url = "http://127.0.0.1:8888";
+        String url = "http://localhost:8090/greeting/yyaa";
         OpentracingSender opentracingSender=new OpentracingSender(url);
         for (int i = 0; i < 10000; i++) {
             opentracingSender.send();

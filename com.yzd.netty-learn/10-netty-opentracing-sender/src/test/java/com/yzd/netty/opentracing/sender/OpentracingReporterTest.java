@@ -15,8 +15,8 @@ public class OpentracingReporterTest {
     @Test
     public void report() {
         new Thread(()->{
-            for (int i = 0; i < 10000000; i++) {
-                if(i%777==0){
+            for (int i = 0; i < 10000; i++) {
+                if(i%17==0){
                     try {
                         Thread.sleep(5*1000);
                     } catch (InterruptedException e) {

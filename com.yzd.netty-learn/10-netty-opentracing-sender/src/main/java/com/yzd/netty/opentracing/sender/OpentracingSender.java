@@ -1,5 +1,6 @@
 package com.yzd.netty.opentracing.sender;
 
+import com.yzd.common.HttpRequestUtil;
 import com.yzd.netty.opentracing.sender.handler.OpentracingSendChannelHandler;
 import com.yzd.netty.opentracing.sender.handler.OpentracingSendChannelInitializer;
 import io.netty.bootstrap.Bootstrap;
@@ -9,7 +10,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.HttpScheme;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -20,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import javax.net.ssl.SSLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -72,10 +76,12 @@ public class OpentracingSender {
         b.handler(new OpentracingSendChannelInitializer(getSslContext(uri.getScheme())));
         b.connect(uri.getHost(), getPort(uri)).addListener(new ConnectFutureListener(this));
     }
+
     public void reload(String url) throws Exception {
-        this.url=url;
+        this.url = url;
         connection();
     }
+
     public void send() throws InterruptedException {
         if (disable()) {
             return;
@@ -84,6 +90,11 @@ public class OpentracingSender {
             if (isAvailableChannel()) {
                 log.info("send span data");
                 channel.writeAndFlush("span data");
+                Map<String, String> header = new HashMap<>();
+                header.put(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
+                header.put(HttpHeaderNames.CONTENT_TYPE.toString(), HttpHeaderValues.APPLICATION_JSON.toString());
+                DefaultFullHttpRequest request = HttpRequestUtil.createFullHttpRequest(createUri(url), HttpVersion.HTTP_1_1, HttpMethod.POST, header, "{body}", StandardCharsets.UTF_8.toString());
+                channel.writeAndFlush(request);
                 return;
             }
             if (connectionFailCount > MAX_FAST_CONNECTION_COUNT) {
@@ -94,8 +105,13 @@ public class OpentracingSender {
         }
     }
 
-    private URI createUri(String url) throws URISyntaxException {
-        URI uri = new URI(url);
+    private URI createUri(String url) {
+        URI uri = null;
+        try {
+            uri = new URI(url);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
         if (!HttpScheme.HTTP.toString().equalsIgnoreCase(uri.getScheme())
                 && !HttpScheme.HTTPS.toString().equalsIgnoreCase(uri.getScheme())) {
             throw new UnsupportedOperationException("Only HTTP(S) is supported.");
