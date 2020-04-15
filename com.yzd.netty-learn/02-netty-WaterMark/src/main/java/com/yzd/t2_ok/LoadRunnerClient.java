@@ -28,6 +28,7 @@ public class LoadRunnerClient {
             b.group(group)
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.TCP_NODELAY, true)
+                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1 * 1024 * 1024, 5 * 1024 * 1024))
                     //设置请求的高水位
                     .option(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 10 * 1024 * 1024)
                     .handler(new ChannelInitializer<SocketChannel>() {
@@ -45,7 +46,7 @@ public class LoadRunnerClient {
     }
 }
 
- class LoadRunnerClientHandler extends ChannelInboundHandlerAdapter {
+class LoadRunnerClientHandler extends ChannelInboundHandlerAdapter {
     private final ByteBuf firstMessage;
     Runnable loadRunner;
 
@@ -78,7 +79,7 @@ public class LoadRunnerClient {
                 }
                 ByteBuf msg = null;
                 final int len = "Netty OOM Example".getBytes().length;
-                Boolean reWrite=false;
+                Boolean reWrite = false;
                 while (true) {
                     //防止发送队列积压
                     //判断是否越过高水位
@@ -86,12 +87,12 @@ public class LoadRunnerClient {
                         msg = Unpooled.wrappedBuffer("Netty OOM Example".getBytes());
                         //这里会有问题
                         ctx.writeAndFlush(msg);
-                        if(reWrite){
+                        if (reWrite) {
                             System.out.println("重新开始写数据");
-                            reWrite=false;
+                            reWrite = false;
                         }
                     } else {
-                        reWrite=true;
+                        reWrite = true;
                         System.out.println("写入队列已经满了对应buffer的大小 :" + ctx.channel().unsafe().outboundBuffer().nioBufferCount());
                     }
                 }
@@ -110,14 +111,15 @@ public class LoadRunnerClient {
         cause.printStackTrace();
         ctx.close();
     }
-     @Override
-     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-         System.out.println("channel 可写更改-高低水位线:channelWritabilityChanged()");
-         if(!ctx.channel().isWritable()){
-             System.err.println("不可写");
-         }
-         super.channelWritabilityChanged(ctx);
 
-     }
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("channel 可写更改-高低水位线:channelWritabilityChanged()");
+        if (!ctx.channel().isWritable()) {
+            System.err.println("不可写");
+        }
+        super.channelWritabilityChanged(ctx);
+
+    }
 
 }

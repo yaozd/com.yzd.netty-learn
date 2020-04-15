@@ -31,6 +31,7 @@ public class LoadRunnerClient {
             b.group(group)
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.TCP_NODELAY, true)
+                    .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(1 * 1024 * 1024, 5 * 1024 * 1024))
                     //设置请求的高水位 10M
                     .option(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 10 * 1024 * 1024)
                     //.option(WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(30 * M, 50 * M))
