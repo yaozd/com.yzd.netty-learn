@@ -9,14 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>07-netty-common</artifactId>
-    <dependencies>
-        <!-- https://mvnrepository.com/artifact/dnsjava/dnsjava -->
-        <dependency>
-            <groupId>dnsjava</groupId>
-            <artifactId>dnsjava</artifactId>
-            <version>3.0.2</version>
-        </dependency>
-    </dependencies>
+    <artifactId>11-netty-dns</artifactId>
+
 
 </project>

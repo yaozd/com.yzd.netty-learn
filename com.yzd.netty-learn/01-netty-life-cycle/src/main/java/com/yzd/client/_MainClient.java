@@ -22,6 +22,8 @@ public class _MainClient {
                     .channel(NioSocketChannel.class)
                     .handler(new MyChannelInitializer());
             ChannelFuture future = bootstrap.connect("localhost", _MainServer.PORT).sync();
+            String remoteAddress = future.channel().remoteAddress().toString();
+            System.out.println(remoteAddress);
             future.channel().closeFuture().sync();
         } finally {
             group.shutdownGracefully();

@@ -40,6 +40,7 @@
         <module>10-netty-opentracing</module>
         <module>10-netty-opentracing-sender</module>
         <module>10-netty-opentracing-sender-multi</module>
+        <module>11-netty-dns</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -99,6 +100,11 @@
             <artifactId>awaitility</artifactId>
             <version>${awaitility.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.8.1</version>
         </dependency>
     </dependencies>
     <repositories>
