@@ -30,10 +30,18 @@ public abstract class BaseResolverProvider implements ResolverProvider {
 
     @Override
     public InetSocketAddress doSelect() {
-        if (null == nodeArray || nodeArray.length == 0) {
+        try {
+            return getNode();
+        } catch (IndexOutOfBoundsException ex) {
             return null;
         }
+    }
+
+    private InetSocketAddress getNode() {
         int nodeSize = nodeArray.length;
+        if (nodeSize == 0) {
+            return null;
+        }
         if (nodeSize == 1) {
             return nodeArray[0];
         }
@@ -54,8 +62,8 @@ public abstract class BaseResolverProvider implements ResolverProvider {
     public void reloadNode(Set<InetSocketAddress> newNodeSet) {
         Sets.SetView<InetSocketAddress> diff = Sets.union(nodeSet, newNodeSet);
         if (diff.size() > 0) {
-            nodeSet = newNodeSet;
             nodeArray = newNodeSet.toArray(new InetSocketAddress[newNodeSet.size()]);
+            nodeSet = newNodeSet;
         }
         //保证在多线情况下正常清除数据
         if (isClose) {
@@ -69,7 +77,7 @@ public abstract class BaseResolverProvider implements ResolverProvider {
     }
 
     private void clearData() {
-        nodeSet = Collections.emptySet();
         nodeArray = new InetSocketAddress[]{};
+        nodeSet = Collections.emptySet();
     }
 }
