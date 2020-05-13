@@ -4,10 +4,7 @@ import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 模拟配置变更操作
@@ -27,10 +24,20 @@ public class CollectionAddressTest {
         set1.add(new InetSocketAddress("127.0.0.1", 100));
         set2.add(new InetSocketAddress("127.0.0.2", 100));
         set2.add(new InetSocketAddress("127.0.0.3", 100));
+        set2.add(new InetSocketAddress("127.0.0.4", 100));
+        set2.add(new InetSocketAddress("127.0.0.5", 100));
+        set2.add(new InetSocketAddress("127.0.0.6", 100));
+        set2.add(new InetSocketAddress("127.0.0.7", 100));
+        set2.add(new InetSocketAddress("127.0.0.8", 100));
+        set2.add(new InetSocketAddress("127.0.0.9", 100));
+        set2.add(new InetSocketAddress("127.0.0.10", 100));
+        set2.add(new InetSocketAddress("127.0.0.11", 100));
+        set2.add(new InetSocketAddress("127.0.0.12", 100));
         //交集
         Sets.SetView<InetSocketAddress> inter = Sets.intersection(set1, set2);
         //差集
         Sets.SetView<InetSocketAddress> diff = Sets.difference(set1, set2);
+        System.out.println("diff size:"+diff.size());
         //并集
         Sets.SetView<InetSocketAddress> union = Sets.union(set1, set2);
         //
@@ -53,5 +60,23 @@ public class CollectionAddressTest {
             InetSocketAddress inetSocketAddress = roundRobinSimple.doSelect(nodes);
             //System.out.println(inetSocketAddress);
         }
+        //配置更新后，关闭已经删除的节点的连接
+        Map<String,Set<InetSocketAddress>> validNodes=new HashMap<>();
+        validNodes.put(key,set2);
+        if(validNodes==null){
+            System.out.println("not found nodes");
+            return;
+        }
+        Set<InetSocketAddress> nodeSet=validNodes.get(key);
+        for (int i = 0; i < 10000000; i++) {
+            boolean contains = nodeSet.contains(address);
+            //System.out.println(contains);
+        }
     }
+
+    @Test
+    public void listTest() {
+        List<InetSocketAddress> inetSocketAddressList=new ArrayList<>();
+    }
+
 }

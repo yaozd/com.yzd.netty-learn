@@ -41,6 +41,7 @@
         <module>10-netty-opentracing-sender</module>
         <module>10-netty-opentracing-sender-multi</module>
         <module>11-netty-dns</module>
+        <module>11-netty-dns-resolver</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -105,6 +106,12 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.databene</groupId>
+            <artifactId>contiperf</artifactId>
+            <version>2.1.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <repositories>
