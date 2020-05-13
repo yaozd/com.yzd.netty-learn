@@ -4,6 +4,11 @@ import ch.qos.logback.classic.LoggerContext;
 import cn.hutool.core.thread.ThreadUtil;
 import com.yzd.netty.resolver.config.DnsServerConfig;
 import com.yzd.netty.resolver.config.TargetNode;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.resolver.dns.DefaultDnsCache;
+import io.netty.resolver.dns.DnsCacheEntry;
 import lombok.extern.slf4j.Slf4j;
 import org.databene.contiperf.PerfTest;
 import org.databene.contiperf.junit.ContiPerfRule;
@@ -12,7 +17,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.List;
 
 /**
  * @Author: yaozh
@@ -45,12 +53,13 @@ public class DnsResolverProviderTest {
     }
 
     @Test
+    @PerfTest(threads = 1, invocations = 3000)
     public void queryDNSTest() {
         DnsServerConfig dnsServerConfig = new DnsServerConfig();
-        dnsServerConfig.setHostname("8.8.8.8");
+        dnsServerConfig.setHostname("8.8.8.81");
         TargetNode targetNode = new TargetNode();
-        //targetNode.setHost("dns.test.hualala.com");
-        targetNode.setHost("www.hualala.com");
+        targetNode.setHost("dns.test.hualala.com");
+        //targetNode.setHost("www.hualala.com");
         DnsResolverProvider provider = new DnsResolverProvider(null, targetNode);
         provider.queryDNS();
         ThreadUtil.sleep(1000 * 1);
@@ -58,7 +67,7 @@ public class DnsResolverProviderTest {
     }
 
     @Test
-    @PerfTest(threads = 5,invocations = 10)
+    @PerfTest(threads = 5, invocations = 10)
     public void queryDNSMultiThreadsTest() {
         DnsResolverProvider provider = new DnsResolverProvider(null, targetNode);
         provider.queryDNS();
@@ -89,9 +98,8 @@ public class DnsResolverProviderTest {
         ThreadUtil.sleep(1000 * 10);
         for (int i = 0; i < 10; i++) {
             InetSocketAddress inetSocketAddress = provider.doSelect();
-            log.info("address:{}",inetSocketAddress);
+            log.info("address:{}", inetSocketAddress);
         }
     }
-
 
 }

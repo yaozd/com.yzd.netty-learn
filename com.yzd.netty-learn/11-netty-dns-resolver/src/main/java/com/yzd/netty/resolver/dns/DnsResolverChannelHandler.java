@@ -1,6 +1,5 @@
 package com.yzd.netty.resolver.dns;
 
-import com.google.common.collect.Sets;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -33,6 +32,7 @@ public class DnsResolverChannelHandler extends SimpleChannelInboundHandler<Datag
         handleQueryResp(msg);
         ctx.close();
     }
+
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object obj) throws Exception {
         if (obj instanceof IdleStateEvent) {
@@ -43,6 +43,7 @@ public class DnsResolverChannelHandler extends SimpleChannelInboundHandler<Datag
             }
         }
     }
+
     private void handleQueryResp(DatagramDnsResponse msg) {
         if (msg.count(DnsSection.QUESTION) < 1) {
             log.warn("Dns section question not found!");
@@ -56,7 +57,8 @@ public class DnsResolverChannelHandler extends SimpleChannelInboundHandler<Datag
         if (DnsResponseCode.NOERROR.equals(code)) {
             int answerCount = msg.count(DnsSection.ANSWER);
             if (answerCount == 0) {
-                log.error("Dns resolver fail! dns response code:NoError(0) ,but answer is null,dns server:{} ,target node host:{} .", resolverProvider.getDnsServer(), resolverProvider.getTargetNodeHost());
+                resolverProvider.reloadNode(Collections.EMPTY_SET);
+                log.warn("Dns resolver! dns response code:NoError(0) ,but answer is null,dns server:{} ,target node host:{} .", resolverProvider.getDnsServer(), resolverProvider.getTargetNodeHost());
                 return;
             }
 
@@ -66,9 +68,12 @@ public class DnsResolverChannelHandler extends SimpleChannelInboundHandler<Datag
                 if (record.type() == DnsRecordType.A) {
                     //just print the IP after query
                     DnsRawRecord raw = (DnsRawRecord) record;
+                    if (log.isDebugEnabled()) {
+                        log.debug("time to Live:{}", raw.timeToLive());
+                    }
                     String ipAddress = NetUtil.bytesToIpAddress(ByteBufUtil.getBytes(raw.content()));
                     tempNodeSet.add(new InetSocketAddress(ipAddress, resolverProvider.getTargetNodePort()));
-                    if(log.isDebugEnabled()){
+                    if (log.isDebugEnabled()) {
                         log.debug(ipAddress);
                     }
                 }
@@ -79,6 +84,7 @@ public class DnsResolverChannelHandler extends SimpleChannelInboundHandler<Datag
         }
         if (DnsResponseCode.NXDOMAIN.equals(code)) {
             resolverProvider.reloadNode(Collections.EMPTY_SET);
+            log.warn("Dns resolver! dns response code:NXDomain(3) ,not exist domain,dns server:{} ,target node host:{} .", resolverProvider.getDnsServer(), resolverProvider.getTargetNodeHost());
             return;
         }
         log.error("Dns resolver fail! dns response code name:{} ,code value:{} .", code, code.intValue());

@@ -69,8 +69,12 @@ public class DnsResolverProvider extends BaseResolverProvider {
                 return;
             }
             Channel newChannel = future.channel();
-            DnsQuery query = new DatagramDnsQuery(null, resolverProvider.getDnsServer(), 1)
-                    .setRecord(DnsSection.QUESTION, new DefaultDnsQuestion(resolverProvider.targetNode.getHost(), DnsRecordType.A));
+            DnsQuery query = new DatagramDnsQuery(null, resolverProvider.getDnsServer(), 5)
+                    .setRecord(DnsSection.QUESTION, new DefaultDnsQuestion(resolverProvider.targetNode.getHost(), DnsRecordType.A))
+                    //recursion desired:do query recursively 需要递归：递归查询
+                    .setRecursionDesired(true)
+                    //0 standard query（标准查询）
+                    .setOpCode(DnsOpCode.QUERY);
             newChannel.writeAndFlush(query);
             log.info("connect success");
         }

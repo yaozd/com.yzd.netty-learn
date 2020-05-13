@@ -82,9 +82,12 @@ public final class DnsClient {
             for (int i = 0; i < 1000; i++) {
                 //
                 final Channel ch = b.bind(0).sync().channel();
-                DnsQuery query = new DatagramDnsQuery(null, addr, 1).setRecord(
-                        DnsSection.QUESTION,
-                        new DefaultDnsQuestion(QUERY_DOMAIN, DnsRecordType.A));
+                DnsQuery query = new DatagramDnsQuery(null, addr, 1)
+                        .setRecord(DnsSection.QUESTION, new DefaultDnsQuestion(QUERY_DOMAIN, DnsRecordType.A))
+                        //0 standard query（标准查询）
+                        .setOpCode(DnsOpCode.QUERY)
+                        //recursion desired:do query recursively 需要递归：递归查询
+                        .setRecursionDesired(true);
                 ch.writeAndFlush(query).sync();
                 boolean succ = ch.closeFuture().await(10, TimeUnit.SECONDS);
                 if (!succ) {
