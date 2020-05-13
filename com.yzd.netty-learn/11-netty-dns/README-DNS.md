@@ -81,3 +81,22 @@ ANY=0xFF //指定所有数据类型。
     - [https://github.com/netty/netty/blob/4.1/example/src/main/java/io/netty/example/dns/udp/DnsClient.java](https://github.com/netty/netty/blob/4.1/example/src/main/java/io/netty/example/dns/udp/DnsClient.java)
 - [https://github.com/nzhenry/dns-proxy](https://github.com/nzhenry/dns-proxy)
 
+
+## DNS查询覆盖模拟
+```
+1.如果当前查询的域名，在内网的DNS服务器不存在，则需要请求外网的DNS进行递归查询域名，
+如果使用非递归查询请求包，循环请求内网DNS服务器，就可以清空内网DNS服务器的本地缓存。
+但当正常的“递归查询请求包”发起请求时就返回NoError(0) ,但 answer 为空。
+
+// 非递归查询请求包
+DnsQuery query = new DatagramDnsQuery(null, addr, 1)
+            .setRecord(DnsSection.QUESTION, new DefaultDnsQuestion(QUERY_DOMAIN, DnsRecordType.A));
+
+// 递归查询请求包
+DnsQuery query = new DatagramDnsQuery(null, addr, 1)
+            .setRecord(DnsSection.QUESTION, new DefaultDnsQuestion(QUERY_DOMAIN, DnsRecordType.A))
+            //0 standard query（标准查询）
+            .setOpCode(DnsOpCode.QUERY)
+            //recursion desired:do query recursively 需要递归：递归查询
+            .setRecursionDesired(true);
+```
