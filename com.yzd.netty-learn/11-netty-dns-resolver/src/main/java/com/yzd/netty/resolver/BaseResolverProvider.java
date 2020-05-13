@@ -2,11 +2,10 @@ package com.yzd.netty.resolver;
 
 import com.google.common.collect.Sets;
 import com.yzd.netty.resolver.config.TargetNode;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import lombok.Getter;
 
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,13 +15,18 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Description:
  */
 public abstract class BaseResolverProvider implements ResolverProvider {
+
     private static final int MAX_REWIND_SIZE = 1000000;
     private AtomicInteger currentCount = new AtomicInteger(0);
     protected TargetNode targetNode;
-    protected EventLoopGroup group = new NioEventLoopGroup();
     @Getter
     private Set<InetSocketAddress> nodeSet = new HashSet<>(10);
     private InetSocketAddress[] nodeArray = {};
+    private volatile boolean isClose = false;
+
+    protected BaseResolverProvider(TargetNode targetNode) {
+        this.targetNode = targetNode;
+    }
 
     @Override
     public InetSocketAddress doSelect() {
@@ -51,7 +55,21 @@ public abstract class BaseResolverProvider implements ResolverProvider {
         Sets.SetView<InetSocketAddress> diff = Sets.union(nodeSet, newNodeSet);
         if (diff.size() > 0) {
             nodeSet = newNodeSet;
-            nodeArray = nodeSet.toArray(new InetSocketAddress[nodeSet.size()]);
+            nodeArray = newNodeSet.toArray(new InetSocketAddress[newNodeSet.size()]);
         }
+        //保证在多线情况下正常清除数据
+        if (isClose) {
+            clearData();
+        }
+    }
+
+    protected void close() {
+        isClose = true;
+        clearData();
+    }
+
+    private void clearData() {
+        nodeSet = Collections.emptySet();
+        nodeArray = new InetSocketAddress[]{};
     }
 }

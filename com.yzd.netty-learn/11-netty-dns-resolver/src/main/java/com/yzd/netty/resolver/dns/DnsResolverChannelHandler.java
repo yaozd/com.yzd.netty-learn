@@ -57,7 +57,7 @@ public class DnsResolverChannelHandler extends SimpleChannelInboundHandler<Datag
         if (DnsResponseCode.NOERROR.equals(code)) {
             int answerCount = msg.count(DnsSection.ANSWER);
             if (answerCount == 0) {
-                resolverProvider.reloadNode(Collections.EMPTY_SET);
+                resolverProvider.reloadNode(Collections.emptySet());
                 log.warn("Dns resolver! dns response code:NoError(0) ,but answer is null,dns server:{} ,target node host:{} .", resolverProvider.getDnsServer(), resolverProvider.getTargetNodeHost());
                 return;
             }
@@ -83,7 +83,7 @@ public class DnsResolverChannelHandler extends SimpleChannelInboundHandler<Datag
             return;
         }
         if (DnsResponseCode.NXDOMAIN.equals(code)) {
-            resolverProvider.reloadNode(Collections.EMPTY_SET);
+            resolverProvider.reloadNode(Collections.emptySet());
             log.warn("Dns resolver! dns response code:NXDomain(3) ,not exist domain,dns server:{} ,target node host:{} .", resolverProvider.getDnsServer(), resolverProvider.getTargetNodeHost());
             return;
         }

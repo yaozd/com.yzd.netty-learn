@@ -7,24 +7,33 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.codec.dns.*;
 import io.netty.util.concurrent.GenericFutureListener;
+import io.netty.util.concurrent.ScheduledFuture;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * @Author: yaozh
  * @Description:
  */
 @Slf4j
-public class DnsResolverProvider extends BaseResolverProvider {
+public class DnsResolverProvider extends BaseResolverProvider implements Runnable {
     private final DnsServerConfig dnsServerConfig;
+    private volatile ScheduledFuture<?> scheduledFuture;
+    private EventLoopGroup group = new NioEventLoopGroup();
 
     public DnsResolverProvider(DnsServerConfig dnsServerConfig, TargetNode targetNode) {
+        super(targetNode);
         this.dnsServerConfig = dnsServerConfig;
-        this.targetNode = targetNode;
+        this.scheduledFuture = group.scheduleWithFixedDelay(
+                this, 0, 10, SECONDS);
     }
 
     public void queryDNS() {
@@ -49,6 +58,19 @@ public class DnsResolverProvider extends BaseResolverProvider {
 
     public String getTargetNodeHost() {
         return targetNode.getHost();
+    }
+
+    @Override
+    public void run() {
+        queryDNS();
+    }
+
+    @Override
+    public void shutdown() {
+        if (scheduledFuture != null) {
+            scheduledFuture.cancel(true);
+        }
+        close();
     }
 
 

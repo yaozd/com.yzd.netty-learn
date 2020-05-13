@@ -29,4 +29,9 @@ public interface ResolverProvider {
      * @param newNodeSet
      */
     void reloadNode(Set<InetSocketAddress> newNodeSet);
+
+    /**
+     * shutdown
+     */
+    void shutdown();
 }
