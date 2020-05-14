@@ -3,6 +3,7 @@ package com.yzd.netty.resolver.dns;
 import ch.qos.logback.classic.LoggerContext;
 import cn.hutool.core.thread.ThreadUtil;
 import com.yzd.netty.resolver.ResolverProvider;
+import com.yzd.netty.resolver.config.DnsServerConfig;
 import com.yzd.netty.resolver.config.TargetNode;
 import lombok.extern.slf4j.Slf4j;
 import org.databene.contiperf.PerfTest;
@@ -28,11 +29,17 @@ public class DnsResolverSelectNodeTest {
     @BeforeClass
     public static void runBeforeTestMethod() {
         targetNode.setHost("dns.test.hualala.com");
-        resolverProvider=new DnsResolverProvider(null,targetNode);
+        DnsServerConfig dnsServerConfig=new DnsServerConfig();
+        //dnsServerConfig.setHostname("192.168.56.112");
+        resolverProvider=new DnsResolverProvider(dnsServerConfig,targetNode);
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         ch.qos.logback.classic.Logger logger = loggerContext.getLogger("root");
         //logger.setLevel(Level.toLevel("INFO"));
         ThreadUtil.sleep(1, TimeUnit.SECONDS);
+        ThreadUtil.newSingleExecutor().submit(()->{
+            ThreadUtil.sleep(10, TimeUnit.SECONDS);
+            resolverProvider.shutdown();
+        });
     }
     @Test
     //@PerfTest(threads = 5,invocations = 1000000)
@@ -41,5 +48,6 @@ public class DnsResolverSelectNodeTest {
         InetSocketAddress inetSocketAddress = resolverProvider.doSelect();
         resolverProvider.isEnable(inetSocketAddress);
         //log.info("address:{}", inetSocketAddress);
+        //ThreadUtil.sleep(1, TimeUnit.SECONDS);
     }
 }
