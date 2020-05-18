@@ -110,4 +110,13 @@ public class DnsTest {
         }
     }
 
+    @Test
+    public void addressTest() {
+        InetSocketAddress remoteInetSocketAddress = new InetSocketAddress("a127.0.0.1", 80);
+        String hostName = remoteInetSocketAddress.getHostName();
+        System.out.println(hostName);
+    }
+
+
+
 }

@@ -46,7 +46,7 @@ public class DnsResolverSelectNodeTest {
     @PerfTest(threads = 5,duration = 30000)
     public void selectTargetNodeTest() {
         InetSocketAddress inetSocketAddress = resolverProvider.doSelect();
-        resolverProvider.isEnable(inetSocketAddress);
+        resolverProvider.isAvailable(inetSocketAddress);
         //log.info("address:{}", inetSocketAddress);
         //ThreadUtil.sleep(1, TimeUnit.SECONDS);
     }

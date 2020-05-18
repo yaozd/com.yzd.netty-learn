@@ -21,7 +21,7 @@ public interface ResolverProvider {
      * @param address
      * @return
      */
-    boolean isEnable(InetSocketAddress address);
+    boolean isAvailable(InetSocketAddress address);
 
     /**
      * reload target node
@@ -34,4 +34,11 @@ public interface ResolverProvider {
      * shutdown
      */
     void shutdown();
+
+    /**
+     * get all node
+     *
+     * @return
+     */
+    Set<InetSocketAddress> getAllNode();
 }

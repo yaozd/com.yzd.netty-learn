@@ -54,7 +54,7 @@ public abstract class BaseResolverProvider implements ResolverProvider {
     }
 
     @Override
-    public boolean isEnable(InetSocketAddress address) {
+    public boolean isAvailable(InetSocketAddress address) {
         return nodeSet.contains(address);
     }
 
@@ -69,6 +69,11 @@ public abstract class BaseResolverProvider implements ResolverProvider {
         if (isClose) {
             clearData();
         }
+    }
+
+    @Override
+    public Set<InetSocketAddress> getAllNode() {
+        return nodeSet;
     }
 
     protected void close() {
