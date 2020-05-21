@@ -22,7 +22,6 @@ public abstract class BaseResolverProvider implements ResolverProvider {
     @Getter
     private Set<InetSocketAddress> nodeSet = new HashSet<>(10);
     private InetSocketAddress[] nodeArray = {};
-    private volatile boolean isClose = false;
 
     protected BaseResolverProvider(TargetNode targetNode) {
         this.targetNode = targetNode;
@@ -63,13 +62,13 @@ public abstract class BaseResolverProvider implements ResolverProvider {
         Sets.SetView<InetSocketAddress> oldDifference = Sets.difference(nodeSet, newNodeSet);
         Sets.SetView<InetSocketAddress> newDifference = Sets.difference(newNodeSet, nodeSet);
         if (oldDifference.size() > 0 || newDifference.size() > 0) {
-            nodeArray = newNodeSet.toArray(new InetSocketAddress[newNodeSet.size()]);
-            nodeSet = newNodeSet;
+            updateNodeSet(newNodeSet);
         }
-        //保证在多线情况下正常清除数据
-        if (isClose) {
-            clearData();
-        }
+    }
+
+    private void updateNodeSet(Set<InetSocketAddress> newNodeSet) {
+        nodeArray = newNodeSet.toArray(new InetSocketAddress[newNodeSet.size()]);
+        nodeSet = newNodeSet;
     }
 
     @Override
@@ -77,13 +76,13 @@ public abstract class BaseResolverProvider implements ResolverProvider {
         return nodeSet;
     }
 
-    protected void close() {
-        isClose = true;
+    @Override
+    public void shutdown() {
+        cancel();
         clearData();
     }
 
     private void clearData() {
-        nodeArray = new InetSocketAddress[]{};
-        nodeSet = Collections.emptySet();
+        updateNodeSet(Collections.emptySet());
     }
 }

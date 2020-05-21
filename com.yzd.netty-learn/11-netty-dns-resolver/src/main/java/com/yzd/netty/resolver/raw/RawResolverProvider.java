@@ -24,7 +24,7 @@ public class RawResolverProvider extends BaseResolverProvider {
     }
 
     @Override
-    public void shutdown() {
-        close();
+    public void cancel() {
+
     }
 }

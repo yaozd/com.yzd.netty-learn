@@ -41,4 +41,9 @@ public interface ResolverProvider {
      * @return
      */
     Set<InetSocketAddress> getAllNode();
+
+    /**
+     * cancel scheduled
+     */
+    void cancel();
 }

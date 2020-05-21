@@ -65,12 +65,12 @@ public class DnsResolverProvider extends BaseResolverProvider implements Runnabl
         queryDNS();
     }
 
+
     @Override
-    public void shutdown() {
+    public void cancel() {
         if (scheduledFuture != null) {
             scheduledFuture.cancel(true);
         }
-        close();
     }
 
 
