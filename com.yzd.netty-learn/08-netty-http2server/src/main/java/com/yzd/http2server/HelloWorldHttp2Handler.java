@@ -15,8 +15,7 @@
 
 package com.yzd.http2server;
 
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
@@ -46,6 +45,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
  * A simple handler that responds with the message "Hello World!".
  */
 public final class HelloWorldHttp2Handler extends Http2ConnectionHandler implements Http2FrameListener {
+    private static final ExtensionRegistryLite EMPTY_REGISTRY = ExtensionRegistryLite.getEmptyRegistry();
 
     static final ByteBuf RESPONSE_BYTES = unreleasableBuffer(copiedBuffer("Hello World", CharsetUtil.UTF_8));
 
@@ -111,9 +111,18 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
             int n=0;
             //删除第一行的空白行：\n\t 。暂时不知道为什么，只知道不删除是无法解析的。
             for (int i = 0; i < bytes.length; i++) {
-                if(i<5){
+                System.out.println("bytes value:"+bytes[i]);
+                //过滤无效空字符the zero character (NUL, ASCII 0x0)
+                if(bytes[i]==0){
                     continue;
                 }
+                //
+//                if(i<5){
+//                    continue;
+//                }
+//                if(bytes[i]>0){
+//
+//                }
                 newarray[n]=bytes[i];
                 n++;
             }
@@ -123,19 +132,33 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
             System.out.println("t2:"+t2);
             //protobuf进行反序列化获得字段值
             CodedInputStream codedinputstream = CodedInputStream.newInstance(newarray);
+            int lastTag=codedinputstream.getLastTag();
+            System.out.println("coded get last tag:"+lastTag);
             boolean isEnd=false;
             while (!isEnd){
                 try {
+
                     int i = codedinputstream.readTag();
+                    if(i==lastTag){
+                        break;
+                    }
+                    //如果要想正确的解析protobuf的数据流，就必须知道pb文件
+                    System.out.println("read tag id :"+i);
                     System.out.println("tag id:"+i+";real tag id:"+ toRealTagId(i,2));
-                    Object obj=codedinputstream.readString();
-                    System.out.println("value:"+obj);
-                    if(i==0){break;}
+                    System.out.println("tag id:"+i+";real tag id:"+ toRealTagId(i));
+                    if(i==108){
+                        Object obj=codedinputstream.readString();
+                        System.out.println(obj);
+                    }
+                    //Object obj=codedinputstream.readString();
+                    //System.out.println("value:"+obj);
+
                 }catch (InvalidProtocolBufferException e){
                     /**
                      * com.google.protobuf.InvalidProtocolBufferException:
                      * Protocol message contained an invalid tag (zero)
                      */
+                    System.out.println("InvalidProtocolBufferException");
                     isEnd=true;
                 }
                 catch (IOException e) {
@@ -151,11 +174,11 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     /**
      * 转为真实的tagId
      * @param tagId
-     * @param tagType 值的类型：
-     *                string=2
-     *                int32=0
      * @return
      */
+    private int toRealTagId(int tagId){
+        return (tagId)/8;
+    }
     private int toRealTagId(int tagId, int tagType){
         if(tagId==0){
             throw new IllegalArgumentException("tag id = 0");
@@ -176,6 +199,7 @@ public final class HelloWorldHttp2Handler extends Http2ConnectionHandler impleme
     @Override
     public void onHeadersRead(ChannelHandlerContext ctx, int streamId, Http2Headers headers, int streamDependency,
                               short weight, boolean exclusive, int padding, boolean endOfStream) {
+        System.out.println(headers.path());
         onHeadersRead(ctx, streamId, headers, padding, endOfStream);
     }
 

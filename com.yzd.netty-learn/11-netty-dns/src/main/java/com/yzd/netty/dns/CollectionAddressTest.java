@@ -16,6 +16,19 @@ import java.util.*;
 public class CollectionAddressTest {
 
     @Test
+    public void collectionTest(){
+        Set<InetSocketAddress> set1 = new HashSet<>();
+        Set<InetSocketAddress> set2 = new HashSet<>();
+        //set1.add(new InetSocketAddress("127.0.0.3", 100));
+        set2.add(new InetSocketAddress("127.0.0.3", 100));
+        //差集
+        Sets.SetView<InetSocketAddress> diff = Sets.difference(set1, set2);
+        System.out.println("diff size:"+diff.size());
+        //差集
+        Sets.SetView<InetSocketAddress> diff2 = Sets.difference(set2,set1);
+        System.out.println("diff size:"+diff2.size());
+    }
+    @Test
     public void collectionAddressTest() {
         Set<InetSocketAddress> set1 = new HashSet<>();
         Set<InetSocketAddress> set2 = new HashSet<>();

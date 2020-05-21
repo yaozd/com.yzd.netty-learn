@@ -60,8 +60,9 @@ public abstract class BaseResolverProvider implements ResolverProvider {
 
     @Override
     public void reloadNode(Set<InetSocketAddress> newNodeSet) {
-        Sets.SetView<InetSocketAddress> diff = Sets.union(nodeSet, newNodeSet);
-        if (diff.size() > 0) {
+        Sets.SetView<InetSocketAddress> oldDifference = Sets.difference(nodeSet, newNodeSet);
+        Sets.SetView<InetSocketAddress> newDifference = Sets.difference(newNodeSet, nodeSet);
+        if (oldDifference.size() > 0 || newDifference.size() > 0) {
             nodeArray = newNodeSet.toArray(new InetSocketAddress[newNodeSet.size()]);
             nodeSet = newNodeSet;
         }
