@@ -20,8 +20,10 @@ public abstract class BaseResolverProvider implements ResolverProvider {
     private AtomicInteger currentCount = new AtomicInteger(0);
     protected TargetNode targetNode;
     @Getter
-    private Set<InetSocketAddress> nodeSet = new HashSet<>(10);
-    private InetSocketAddress[] nodeArray = {};
+    private  volatile Set<InetSocketAddress> nodeSet = new HashSet<>(10);
+    private volatile InetSocketAddress[] nodeArray = {};
+    @Getter
+    private volatile boolean isClosed;
 
     protected BaseResolverProvider(TargetNode targetNode) {
         this.targetNode = targetNode;
@@ -62,6 +64,9 @@ public abstract class BaseResolverProvider implements ResolverProvider {
         Sets.SetView<InetSocketAddress> oldDifference = Sets.difference(nodeSet, newNodeSet);
         Sets.SetView<InetSocketAddress> newDifference = Sets.difference(newNodeSet, nodeSet);
         if (oldDifference.size() > 0 || newDifference.size() > 0) {
+            if(isClosed){
+                return;
+            }
             updateNodeSet(newNodeSet);
         }
     }
@@ -83,6 +88,7 @@ public abstract class BaseResolverProvider implements ResolverProvider {
     }
 
     private void clearData() {
+        isClosed=true;
         updateNodeSet(Collections.emptySet());
     }
 }
