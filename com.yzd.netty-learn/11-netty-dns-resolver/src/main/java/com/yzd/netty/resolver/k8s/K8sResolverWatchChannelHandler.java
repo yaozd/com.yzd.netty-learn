@@ -1,5 +1,6 @@
 package com.yzd.netty.resolver.k8s;
 
+import com.yzd.netty.resolver.utils.JsonUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -15,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.yzd.netty.resolver.k8s.RequestType.QUERY;
 
@@ -63,7 +65,17 @@ public class K8sResolverWatchChannelHandler extends SimpleChannelInboundHandler 
         }
         if (msg instanceof LastHttpContent) {
             log.debug("LastHttpContent");
-            log.info("HTTP_FULL_CONTENT:" + StringUtils.join(contentList.toArray()));
+            String fullContent=StringUtils.join(contentList.toArray());
+            log.info("HTTP_FULL_CONTENT:" + fullContent);
+            Map<String, Object> objectMap = JsonUtils.toMap(fullContent);
+            Object object=objectMap.get("object");
+            if(object==null){
+                log.warn("No valid object,,resolver info({}).", getResolverInfo());
+                resolverProvider.parseSuccess = false;
+                ctx.close();
+                return;
+            }
+            log.info("Object string value:"+String.valueOf(object));
             contentList.clear();
         }
     }

@@ -1,6 +1,10 @@
 package com.yzd.netty.resolver.k8s;
 
-import io.netty.buffer.ByteBuf;
+import com.yzd.netty.resolver.k8s.entity.K8sServiceAddress;
+import com.yzd.netty.resolver.k8s.entity.K8sServiceInfo;
+import com.yzd.netty.resolver.k8s.entity.K8sServicePort;
+import com.yzd.netty.resolver.k8s.entity.K8sServiceSubsets;
+import com.yzd.netty.resolver.utils.JsonUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpContent;
@@ -11,9 +15,12 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.*;
 
 import static com.yzd.netty.resolver.k8s.RequestType.QUERY;
+import static io.netty.util.CharsetUtil.UTF_8;
 
 /**
  * @Author: yaozh
@@ -48,13 +55,34 @@ public class K8sResolverQueryChannelHandler extends SimpleChannelInboundHandler 
         }
         if (msg instanceof HttpContent) {
             HttpContent httpContent = (HttpContent) msg;
-            ByteBuf buf = httpContent.content();
-            log.debug("HTTP_CONTENT:" + buf.toString(io.netty.util.CharsetUtil.UTF_8));
+            String content = httpContent.content().toString(UTF_8);
+            log.debug("HTTP_CONTENT:" + content);
+            Map<String, Set<InetSocketAddress>> addressMap = parseAddress(content);
+            Set<InetSocketAddress> tempNodeSet = addressMap.getOrDefault("http", Collections.emptySet());
+            resolverProvider.reloadNode(tempNodeSet);
         }
         if (msg instanceof LastHttpContent) {
             log.debug("LastHttpContent");
         }
         ctx.close();
+    }
+
+    private Map<String, Set<InetSocketAddress>> parseAddress(String content) {
+        K8sServiceInfo k8sServiceInfo = JsonUtils.toJavaObject(content, K8sServiceInfo.class);
+        if (k8sServiceInfo.getSubsets() == null || k8sServiceInfo.getSubsets().isEmpty()) {
+            log.warn("No valid address,resolver info({}).", getResolverInfo());
+            return Collections.emptyMap();
+        }
+        Map<String, Set<InetSocketAddress>> addressMap = new HashMap<>();
+        for (K8sServiceSubsets subset : k8sServiceInfo.getSubsets()) {
+            for (K8sServicePort port : subset.getPorts()) {
+                Set<InetSocketAddress> addressSet = addressMap.computeIfAbsent(port.getName(), key -> new HashSet<InetSocketAddress>());
+                for (K8sServiceAddress address : subset.getAddresses()) {
+                    addressSet.add(new InetSocketAddress(address.getIp(), port.getPort()));
+                }
+            }
+        }
+        return addressMap;
     }
 
     @Override
