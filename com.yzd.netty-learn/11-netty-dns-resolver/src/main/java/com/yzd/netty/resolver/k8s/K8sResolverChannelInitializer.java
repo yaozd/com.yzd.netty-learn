@@ -2,14 +2,18 @@ package com.yzd.netty.resolver.k8s;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpRequestEncoder;
+import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.ssl.SslContext;
-import io.netty.handler.stream.ChunkedStream;
-import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
+
+import static com.yzd.netty.resolver.k8s.RequestType.QUERY;
+import static com.yzd.netty.resolver.k8s.RequestType.WATCH;
 
 /**
  * @Author: yaozh
@@ -26,7 +30,7 @@ public class K8sResolverChannelInitializer extends ChannelInitializer<Channel> {
         this.resolverProvider = resolverProvider;
         this.sslCtx = sslCtx;
         this.requestType = requestType;
-        this.uri=uri;
+        this.uri = uri;
     }
 
     @Override
@@ -35,12 +39,18 @@ public class K8sResolverChannelInitializer extends ChannelInitializer<Channel> {
         if (sslCtx != null) {
             ch.pipeline().addLast(sslCtx.newHandler(ch.alloc()));
         }
-        ch.pipeline().addLast(new IdleStateHandler(0, 30, 0, TimeUnit.SECONDS));
-        //ch.pipeline().addLast(new HttpResponseDecoder());
-        // 客户端发送的是httprequest，所以要使用HttpRequestEncoder进行编码
-        //ch.pipeline().addLast(new HttpRequestEncoder());
-        ch.pipeline().addLast(new HttpClientCodec());
-        //ch.pipeline().addLast(new HttpObjectAggregator(655350000));
-        ch.pipeline().addLast(new K8sResolverChannelHandler(resolverProvider,requestType,uri));
+        ch.pipeline().addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS));
+        if (QUERY.equals(requestType)) {
+            ch.pipeline().addLast(new HttpClientCodec());
+            //10MB
+            ch.pipeline().addLast(new HttpObjectAggregator(83886080));
+            ch.pipeline().addLast(new K8sResolverQueryChannelHandler(resolverProvider, requestType, uri));
+        }
+        if (WATCH.equals(requestType)) {
+            ch.pipeline().addLast(new K8sWatchHttpResponseDecoder());
+            ch.pipeline().addLast(new HttpRequestEncoder());
+            ch.pipeline().addLast(new K8sResolverWatchChannelHandler(resolverProvider, requestType, uri));
+        }
+
     }
 }

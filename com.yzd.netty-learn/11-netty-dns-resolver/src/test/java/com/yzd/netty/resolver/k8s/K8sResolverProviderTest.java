@@ -16,4 +16,10 @@ public class K8sResolverProviderTest {
         ThreadUtil.sleep(1000*500000);
     }
 
+    @Test
+    public void watchTest() {
+        K8sResolverProvider resolverProvider=new K8sResolverProvider(null);
+        resolverProvider.watch();
+        ThreadUtil.sleep(1000*500000);
+    }
 }

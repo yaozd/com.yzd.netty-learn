@@ -46,8 +46,8 @@ public class K8sResolverProvider extends BaseResolverProvider {
 
 
     public void query() {
-        URI uri = createUri("http://192.168.56.102:8080/api/v1/watch/namespaces/default/endpoints/my-nginx");
-        //URI uri = createUri("http://192.168.56.102:8080/api/v1/namespaces/default/endpoints/my-nginx");
+        log.info("Query!");
+        URI uri = createUri("http://192.168.56.102:8080/api/v1/namespaces/default/endpoints/my-nginx");
         Bootstrap b = getBootstrap();
         b.handler(new K8sResolverChannelInitializer(this, getSslContext(uri.getScheme()), QUERY, uri));
         b.connect(uri.getHost(), getPort(uri)).addListener(new ConnectFutureListener(this, uri));
@@ -65,7 +65,7 @@ public class K8sResolverProvider extends BaseResolverProvider {
     }
 
     public void watch() {
-        System.out.println("watch!");
+        log.info("Watch!");
         URI uri = createUri("http://192.168.56.102:8080/api/v1/watch/namespaces/default/endpoints/my-nginx");
         Bootstrap b = getBootstrap();
         b.handler(new K8sResolverChannelInitializer(this, getSslContext(uri.getScheme()), WATCH, uri));

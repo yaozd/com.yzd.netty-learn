@@ -20,15 +20,15 @@ import static com.yzd.netty.resolver.k8s.RequestType.QUERY;
  * @Description:
  */
 @Slf4j
-public class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
+public class K8sResolverQueryChannelHandler extends SimpleChannelInboundHandler {
 
     private static final int SUCCESS_CODE = 200;
     private final K8sResolverProvider resolverProvider;
     private final RequestType requestType;
     private final URI uri;
-    private long resourceVersion=0L;
+    private long resourceVersion = 0L;
 
-    public K8sResolverChannelHandler(K8sResolverProvider resolverProvider, RequestType requestType, URI uri) {
+    public K8sResolverQueryChannelHandler(K8sResolverProvider resolverProvider, RequestType requestType, URI uri) {
         this.resolverProvider = resolverProvider;
         this.requestType = requestType;
         this.uri = uri;
@@ -42,7 +42,7 @@ public class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
             log.debug("RESPONSE STATUS:" + statusCode);
             if (statusCode != SUCCESS_CODE) {
                 log.info("RESPONSE STATUS:" + statusCode);
-                resolverProvider.parseSuccess=false;
+                resolverProvider.parseSuccess = false;
             }
             log.debug("CONTENT_TYPE:" + httpResponse.headers().get(HttpHeaderNames.CONTENT_TYPE));
         }
@@ -54,9 +54,7 @@ public class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
         if (msg instanceof LastHttpContent) {
             log.debug("LastHttpContent");
         }
-        if(QUERY.equals(requestType)){
-            ctx.close();
-        }
+        ctx.close();
     }
 
     @Override
