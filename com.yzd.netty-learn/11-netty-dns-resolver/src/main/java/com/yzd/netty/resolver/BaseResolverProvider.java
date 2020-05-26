@@ -3,6 +3,7 @@ package com.yzd.netty.resolver;
 import com.google.common.collect.Sets;
 import com.yzd.netty.resolver.config.TargetNode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
@@ -14,13 +15,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Author: yaozh
  * @Description:
  */
+@Slf4j
 public abstract class BaseResolverProvider implements ResolverProvider {
 
     private static final int MAX_REWIND_SIZE = 1000000;
     private AtomicInteger currentCount = new AtomicInteger(0);
     protected TargetNode targetNode;
     @Getter
-    private  volatile Set<InetSocketAddress> nodeSet = new HashSet<>(10);
+    private volatile Set<InetSocketAddress> nodeSet = new HashSet<>(10);
     private volatile InetSocketAddress[] nodeArray = {};
     @Getter
     private volatile boolean isClosed;
@@ -64,10 +66,13 @@ public abstract class BaseResolverProvider implements ResolverProvider {
         Sets.SetView<InetSocketAddress> oldDifference = Sets.difference(nodeSet, newNodeSet);
         Sets.SetView<InetSocketAddress> newDifference = Sets.difference(newNodeSet, nodeSet);
         if (oldDifference.size() > 0 || newDifference.size() > 0) {
-            if(isClosed){
+            if (isClosed) {
                 return;
             }
             updateNodeSet(newNodeSet);
+            if (log.isDebugEnabled()) {
+                log.debug("NODE_SIZE:{}", nodeSet.size());
+            }
         }
     }
 
@@ -88,7 +93,7 @@ public abstract class BaseResolverProvider implements ResolverProvider {
     }
 
     private void clearData() {
-        isClosed=true;
+        isClosed = true;
         updateNodeSet(Collections.emptySet());
     }
 }
