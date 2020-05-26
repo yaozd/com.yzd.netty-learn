@@ -178,8 +178,19 @@ public class K8sResolverProvider extends BaseResolverProvider {
             Map<CharSequence, Object> header = Maps.newHashMapWithExpectedSize(2);
             header.put(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
             header.put(HttpHeaderNames.CONTENT_TYPE.toString(), HttpHeaderValues.APPLICATION_JSON);
+            if (HttpScheme.HTTPS.name().contentEqualsIgnoreCase(uri.getScheme())) {
+                setAuthorizationHeader(header, uri);
+            }
             DefaultFullHttpRequest request = HttpRequestUtil.createFullHttpRequest(uri, HttpVersion.HTTP_1_1, HttpMethod.GET, header);
             newChannel.writeAndFlush(request);
+        }
+
+        private void setAuthorizationHeader(Map<CharSequence, Object> header, URI uri) {
+            String token = K8sTokenProvider.getInstance().getToken(uri.getHost());
+            if (StringUtils.isBlank(token)) {
+                return;
+            }
+            header.put(HttpHeaderNames.AUTHORIZATION, "Bearer " + token);
         }
     }
 

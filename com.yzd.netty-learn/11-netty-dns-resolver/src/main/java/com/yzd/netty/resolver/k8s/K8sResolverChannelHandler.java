@@ -81,7 +81,8 @@ abstract class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
 
     protected void reloadNode(String content) {
         Map<String, Set<InetSocketAddress>> addressMap = parseAddress(content);
-        Set<InetSocketAddress> tempNodeSet = addressMap.getOrDefault("http", Collections.emptySet());
+        //Set<InetSocketAddress> tempNodeSet = addressMap.getOrDefault("http", Collections.emptySet());
+        Set<InetSocketAddress> tempNodeSet = addressMap.getOrDefault(resolverProvider.getTargetNode().getPortType(), Collections.emptySet());
         resolverProvider.reloadNode(tempNodeSet);
         resolverProvider.parseSuccess = true;
     }
