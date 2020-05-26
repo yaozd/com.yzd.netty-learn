@@ -34,11 +34,14 @@ import static com.yzd.netty.resolver.k8s.RequestType.WATCH;
  */
 @Slf4j
 public class K8sResolverProvider extends BaseResolverProvider {
+    protected static final long READER_IDLE_TIME_SECOND = 60L;
+    protected static final long WRITER_IDLE_TIME_SECOND = 5L;
     private static final int MAX_FAST_CONNECTION_COUNT = 10;
-    public boolean parseSuccess = true;
+    protected boolean parseSuccess = true;
     private EventLoopGroup workerGroup = new NioEventLoopGroup();
     private int connectionFailCount = 0;
     private volatile ScheduledFuture<?> scheduledFuture;
+
 
     protected K8sResolverProvider(TargetNode targetNode) {
         super(targetNode);
@@ -74,7 +77,9 @@ public class K8sResolverProvider extends BaseResolverProvider {
 
     @Override
     public void cancel() {
-
+        if (scheduledFuture != null) {
+            scheduledFuture.cancel(true);
+        }
     }
 
     public void reconnection() {

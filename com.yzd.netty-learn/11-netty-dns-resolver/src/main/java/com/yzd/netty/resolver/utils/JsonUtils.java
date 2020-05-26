@@ -22,8 +22,9 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class JsonUtils {
-    // 加载速度太慢了，放在静态代码块中
-    // private static final ObjectMapper mapper = new ObjectMapper();
+    private JsonUtils() {
+    }
+
     private final static ObjectMapper mapper;
 
     /**
@@ -69,10 +70,9 @@ public class JsonUtils {
                 return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
             }
             return mapper.writeValueAsString(obj);
-        } catch (Throwable e) {
-            log.error(String.format("toJSONString %s", obj != null ? obj.toString() : "null"), e);
+        } catch (Exception e) {
+            throw new JsonParserRuntimeException(e);
         }
-        return defaultSupplier.get();
     }
 
     public static <T> T toJavaObject(String value, Class<T> tClass) {
@@ -89,10 +89,9 @@ public class JsonUtils {
                 return defaultSupplier.get();
             }
             return mapper.readValue(value, tClass);
-        } catch (Throwable e) {
-            log.error(String.format("toJavaObject exception: \n %s\n %s", value, tClass), e);
+        } catch (Exception e) {
+            throw new JsonParserRuntimeException(e);
         }
-        return defaultSupplier.get();
     }
 
     public static <T> List<T> toJavaObjectList(String value, Class<T> tClass) {
@@ -110,10 +109,9 @@ public class JsonUtils {
             }
             JavaType javaType = mapper.getTypeFactory().constructParametricType(List.class, tClass);
             return mapper.readValue(value, javaType);
-        } catch (Throwable e) {
-            log.error(String.format("toJavaObjectList exception \n%s\n%s", value, tClass), e);
+        } catch (Exception e) {
+            throw new JsonParserRuntimeException(e);
         }
-        return defaultSupplier.get();
     }
 
     // 简单地直接用json复制或者转换(Cloneable)
@@ -129,6 +127,7 @@ public class JsonUtils {
         return value != null ? toMap(value, () -> null) : null;
     }
 
+    @SuppressWarnings("unchecked")
     public static Map<String, Object> toMap(Object value, Supplier<Map<String, Object>> defaultSupplier) {
         if (value == null) {
             return defaultSupplier.get();
@@ -138,11 +137,12 @@ public class JsonUtils {
                 return (Map<String, Object>) value;
             }
         } catch (Exception e) {
-            log.info("fail to convert" + toJSONString(value), e);
+            throw new JsonParserRuntimeException(e);
         }
         return toMap(toJSONString(value), defaultSupplier);
     }
 
+    @SuppressWarnings("unchecked")
     public static Map<String, Object> toMap(String value, Supplier<Map<String, Object>> defaultSupplier) {
         if (StringUtils.isBlank(value)) {
             return defaultSupplier.get();
@@ -150,9 +150,8 @@ public class JsonUtils {
         try {
             return toJavaObject(value, LinkedHashMap.class);
         } catch (Exception e) {
-            log.error(String.format("toMap exception\n%s", value), e);
+            throw new JsonParserRuntimeException(e);
         }
-        return defaultSupplier.get();
     }
 
 
@@ -164,6 +163,7 @@ public class JsonUtils {
         return value != null ? toList(value, () -> null) : null;
     }
 
+    @SuppressWarnings("unchecked")
     public static List<Object> toList(String value, Supplier<List<Object>> defaultSuppler) {
         if (StringUtils.isBlank(value)) {
             return defaultSuppler.get();
@@ -171,11 +171,11 @@ public class JsonUtils {
         try {
             return toJavaObject(value, List.class);
         } catch (Exception e) {
-            log.error("toList exception\n" + value, e);
+            throw new JsonParserRuntimeException(e);
         }
-        return defaultSuppler.get();
     }
 
+    @SuppressWarnings("unchecked")
     public static List<Object> toList(Object value, Supplier<List<Object>> defaultSuppler) {
         if (value == null) {
             return defaultSuppler.get();
@@ -206,5 +206,12 @@ public class JsonUtils {
             return 0;
         }
         return Integer.valueOf(valueStr);
+    }
+
+    public static class JsonParserRuntimeException extends RuntimeException {
+
+        public JsonParserRuntimeException(Throwable e) {
+            super(e);
+        }
     }
 }

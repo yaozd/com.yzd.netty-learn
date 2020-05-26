@@ -5,13 +5,14 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestEncoder;
-import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.timeout.IdleStateHandler;
 
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
+import static com.yzd.netty.resolver.k8s.K8sResolverProvider.READER_IDLE_TIME_SECOND;
+import static com.yzd.netty.resolver.k8s.K8sResolverProvider.WRITER_IDLE_TIME_SECOND;
 import static com.yzd.netty.resolver.k8s.RequestType.QUERY;
 import static com.yzd.netty.resolver.k8s.RequestType.WATCH;
 
@@ -20,7 +21,6 @@ import static com.yzd.netty.resolver.k8s.RequestType.WATCH;
  * @Description:
  */
 public class K8sResolverChannelInitializer extends ChannelInitializer<Channel> {
-    public static final String HTTP_CLIENT_HANDLER_NAME = "OpentracingSendChannelHandler";
     private final SslContext sslCtx;
     private final RequestType requestType;
     private final K8sResolverProvider resolverProvider;
@@ -39,7 +39,7 @@ public class K8sResolverChannelInitializer extends ChannelInitializer<Channel> {
         if (sslCtx != null) {
             ch.pipeline().addLast(sslCtx.newHandler(ch.alloc()));
         }
-        ch.pipeline().addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS));
+        ch.pipeline().addLast(new IdleStateHandler(READER_IDLE_TIME_SECOND, WRITER_IDLE_TIME_SECOND, 0, TimeUnit.SECONDS));
         if (QUERY.equals(requestType)) {
             ch.pipeline().addLast(new HttpClientCodec());
             //10MB
@@ -51,6 +51,5 @@ public class K8sResolverChannelInitializer extends ChannelInitializer<Channel> {
             ch.pipeline().addLast(new HttpRequestEncoder());
             ch.pipeline().addLast(new K8sResolverWatchChannelHandler(resolverProvider, requestType, uri));
         }
-
     }
 }

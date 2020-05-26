@@ -1,17 +1,19 @@
 package com.yzd.netty.resolver.k8s;
 
-import io.netty.buffer.ByteBuf;
+import com.yzd.netty.resolver.k8s.entity.K8sServiceAddress;
+import com.yzd.netty.resolver.k8s.entity.K8sServiceInfo;
+import com.yzd.netty.resolver.k8s.entity.K8sServicePort;
+import com.yzd.netty.resolver.k8s.entity.K8sServiceSubsets;
+import com.yzd.netty.resolver.utils.JsonUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.*;
 
 import static com.yzd.netty.resolver.k8s.RequestType.QUERY;
 
@@ -20,13 +22,12 @@ import static com.yzd.netty.resolver.k8s.RequestType.QUERY;
  * @Description:
  */
 @Slf4j
-public class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
+abstract class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
 
-    private static final int SUCCESS_CODE = 200;
-    private final K8sResolverProvider resolverProvider;
-    private final RequestType requestType;
-    private final URI uri;
-    private long resourceVersion=0L;
+    protected static final int SUCCESS_CODE = 200;
+    protected final K8sResolverProvider resolverProvider;
+    protected final RequestType requestType;
+    protected final URI uri;
 
     public K8sResolverChannelHandler(K8sResolverProvider resolverProvider, RequestType requestType, URI uri) {
         this.resolverProvider = resolverProvider;
@@ -35,32 +36,10 @@ public class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof HttpResponse) {
-            HttpResponse httpResponse = (HttpResponse) msg;
-            int statusCode = httpResponse.status().code();
-            log.debug("RESPONSE STATUS:" + statusCode);
-            if (statusCode != SUCCESS_CODE) {
-                log.info("RESPONSE STATUS:" + statusCode);
-                resolverProvider.parseSuccess=false;
-            }
-            log.debug("CONTENT_TYPE:" + httpResponse.headers().get(HttpHeaderNames.CONTENT_TYPE));
-        }
-        if (msg instanceof HttpContent) {
-            HttpContent httpContent = (HttpContent) msg;
-            ByteBuf buf = httpContent.content();
-            log.debug("HTTP_CONTENT:" + buf.toString(io.netty.util.CharsetUtil.UTF_8));
-        }
-        if (msg instanceof LastHttpContent) {
-            log.debug("LastHttpContent");
-        }
-        if(QUERY.equals(requestType)){
-            ctx.close();
-        }
-    }
-
-    @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        if (resolverProvider.isClosed()) {
+            return;
+        }
         if (!resolverProvider.parseSuccess) {
             resolverProvider.reconnection();
             return;
@@ -86,17 +65,49 @@ public class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
         if (obj instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) obj;
             if (IdleState.WRITER_IDLE.equals(event.state())) {
-                /**log.info("when WRITER_IDLE,version:{}", version);*/
+                if (resolverProvider.isClosed()) {
+                    ctx.close();
+                }
             }
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.error("Occur an exception that opentracing send handler unexpected!", cause);
+        log.error("K8s resolver fail! Occur an exception !", cause);
+        //json 解析异常
+        if (cause instanceof JsonUtils.JsonParserRuntimeException) {
+            resolverProvider.parseSuccess = false;
+            ctx.close();
+        }
     }
 
-    private String getResolverInfo() {
+    protected void reloadNode(String content) {
+        Map<String, Set<InetSocketAddress>> addressMap = parseAddress(content);
+        Set<InetSocketAddress> tempNodeSet = addressMap.getOrDefault("http", Collections.emptySet());
+        resolverProvider.reloadNode(tempNodeSet);
+        resolverProvider.parseSuccess = true;
+    }
+
+    protected Map<String, Set<InetSocketAddress>> parseAddress(String content) {
+        K8sServiceInfo k8sServiceInfo = JsonUtils.toJavaObject(content, K8sServiceInfo.class);
+        if (k8sServiceInfo == null || k8sServiceInfo.getSubsets() == null || k8sServiceInfo.getSubsets().isEmpty()) {
+            log.warn("K8s resolver fail! no valid address,resolver info({}).", getResolverInfo());
+            return Collections.emptyMap();
+        }
+        Map<String, Set<InetSocketAddress>> addressMap = new HashMap<>();
+        for (K8sServiceSubsets subset : k8sServiceInfo.getSubsets()) {
+            for (K8sServicePort port : subset.getPorts()) {
+                Set<InetSocketAddress> addressSet = addressMap.computeIfAbsent(port.getName(), key -> new HashSet<InetSocketAddress>());
+                for (K8sServiceAddress address : subset.getAddresses()) {
+                    addressSet.add(new InetSocketAddress(address.getIp(), port.getPort()));
+                }
+            }
+        }
+        return addressMap;
+    }
+
+    protected String getResolverInfo() {
         StringBuilder nodeInfo = new StringBuilder();
         nodeInfo.append("request type:").append(requestType)
                 .append(",uri:").append(uri);
