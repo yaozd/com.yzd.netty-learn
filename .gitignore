@@ -74,3 +74,4 @@ target/
 Thumbs.db
 package-install/
 install-package/
+dependency-reduced-pom.xml
