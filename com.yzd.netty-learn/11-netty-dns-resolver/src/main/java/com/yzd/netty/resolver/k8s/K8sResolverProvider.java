@@ -43,7 +43,7 @@ public class K8sResolverProvider extends BaseResolverProvider {
     private volatile ScheduledFuture<?> scheduledFuture;
 
 
-    protected K8sResolverProvider(TargetNode targetNode) {
+    public K8sResolverProvider(TargetNode targetNode) {
         super(targetNode);
     }
 
@@ -87,7 +87,7 @@ public class K8sResolverProvider extends BaseResolverProvider {
             try {
                 query();
             } catch (Exception e) {
-                log.error("opentracing sender connection fail!", e);
+                log.error("K8s resolver connection fail!", e);
             }
 
         }, getIntervalTime(), TimeUnit.SECONDS);
@@ -150,7 +150,7 @@ public class K8sResolverProvider extends BaseResolverProvider {
         public void operationComplete(ChannelFuture future) throws Exception {
             Channel newChannel = future.channel();
             if (!future.isSuccess()) {
-                log.warn("Connection fail! url:{},  fail count:{}", uri, resolverProvider.connectionFailCount);
+                log.warn("K8s resolver connection fail! url:{},  fail count:{}", uri, resolverProvider.connectionFailCount);
                 resolverProvider.connectionFailCount++;
                 if (newChannel != null && newChannel.isOpen()) {
                     newChannel.flush().close();

@@ -29,6 +29,7 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
      * 聚合超时时间
      */
     private static final int AGGREGATOR_TIMEOUT_SECONDS = 10;
+    private static final String LINE_FEED = "\n";
     private List<String> contentList = new ArrayList<>();
     private int writeIdleCount = 0;
 
@@ -66,7 +67,22 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
             String fullContent = StringUtils.join(contentList.toArray());
             contentList.clear();
             log.info("HTTP_FULL_CONTENT:" + fullContent);
+            if (StringUtils.isBlank(fullContent)) {
+                log.info("K8s resolver! last chunk data,full content is blank,close channel,resolver info({}).", getResolverInfo());
+                ctx.close();
+                return;
+            }
+            if (LINE_FEED.equals(fullContent)) {
+                log.info("K8s resolver! last chunk data,full content is LINE_FEED,close channel,resolver info({}).", getResolverInfo());
+                ctx.close();
+                return;
+            }
             Map<String, Object> objectMap = JsonUtils.toMap(fullContent);
+            if (objectMap == null) {
+                log.error("K8s resolver fail! resolver info({}),objectMap is null,close channel,full content:{}.", getResolverInfo(), fullContent);
+                ctx.close();
+                return;
+            }
             Object object = objectMap.get("object");
             if (object == null) {
                 log.warn("K8s resolver ! no valid object,resolver info({}).", getResolverInfo());
@@ -97,7 +113,7 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
      * @param ctx
      */
     private void aggregationTimeout(ChannelHandlerContext ctx) {
-        if (contentList.size() == 0) {
+        if (contentList.isEmpty()) {
             return;
         }
         if (writeIdleCount * WRITER_IDLE_TIME_SECOND > AGGREGATOR_TIMEOUT_SECONDS) {

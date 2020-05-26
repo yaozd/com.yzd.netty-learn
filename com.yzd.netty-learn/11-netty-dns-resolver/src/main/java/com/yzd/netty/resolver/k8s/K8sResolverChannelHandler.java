@@ -78,8 +78,8 @@ abstract class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
         //json 解析异常
         if (cause instanceof JsonUtils.JsonParserRuntimeException) {
             resolverProvider.parseSuccess = false;
-            ctx.close();
         }
+        ctx.close();
     }
 
     protected void reloadNode(String content) {
