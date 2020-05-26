@@ -18,6 +18,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.ScheduledFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.net.ssl.SSLException;
 import java.net.URI;
@@ -34,6 +35,8 @@ import static com.yzd.netty.resolver.k8s.RequestType.WATCH;
  */
 @Slf4j
 public class K8sResolverProvider extends BaseResolverProvider {
+    private static final String QUERY_URL_TEMPLATE = "%s://%s:%d/api/v1/namespaces/%s/endpoints/%s";
+    private static final String WATCH_URL_TEMPLATE = "%s://%s:%d/api/v1/watch/namespaces/%s/endpoints/%s";
     protected static final long READER_IDLE_TIME_SECOND = 60L;
     protected static final long WRITER_IDLE_TIME_SECOND = 5L;
     private static final int MAX_FAST_CONNECTION_COUNT = 10;
@@ -41,19 +44,32 @@ public class K8sResolverProvider extends BaseResolverProvider {
     private EventLoopGroup workerGroup = new NioEventLoopGroup();
     private int connectionFailCount = 0;
     private volatile ScheduledFuture<?> scheduledFuture;
-
+    private URI queryUri;
+    private URI watchUri;
 
     public K8sResolverProvider(TargetNode targetNode) {
         super(targetNode);
+        init(targetNode);
     }
 
+    private void init(TargetNode targetNode) {
+        String[] pathSplits = StringUtils.split(targetNode.getServicePath(), "/");
+        if (pathSplits == null || pathSplits.length != 2) {
+            throw new IllegalArgumentException("Target node service path invalid ! service path:" + targetNode.getServicePath());
+        }
+        String queryUrl = String.format(QUERY_URL_TEMPLATE, targetNode.getProtocol(), targetNode.getHost(), targetNode.getPort(), pathSplits[0], pathSplits[1]);
+        queryUri = createUri(queryUrl);
+        log.debug(queryUri.toString());
+        String watchUrl = String.format(WATCH_URL_TEMPLATE, targetNode.getProtocol(), targetNode.getHost(), targetNode.getPort(), pathSplits[0], pathSplits[1]);
+        watchUri = createUri(watchUrl);
+        log.debug(watchUri.toString());
+    }
 
     public void query() {
         log.info("Query!");
-        URI uri = createUri("http://192.168.56.102:8080/api/v1/namespaces/default/endpoints/my-nginx");
         Bootstrap b = getBootstrap();
-        b.handler(new K8sResolverChannelInitializer(this, getSslContext(uri.getScheme()), QUERY, uri));
-        b.connect(uri.getHost(), getPort(uri)).addListener(new ConnectFutureListener(this, uri));
+        b.handler(new K8sResolverChannelInitializer(this, getSslContext(queryUri.getScheme()), QUERY, queryUri));
+        b.connect(queryUri.getHost(), getPort(queryUri)).addListener(new ConnectFutureListener(this, queryUri));
     }
 
     private Bootstrap getBootstrap() {
@@ -69,10 +85,9 @@ public class K8sResolverProvider extends BaseResolverProvider {
 
     public void watch() {
         log.info("Watch!");
-        URI uri = createUri("http://192.168.56.102:8080/api/v1/watch/namespaces/default/endpoints/my-nginx");
         Bootstrap b = getBootstrap();
-        b.handler(new K8sResolverChannelInitializer(this, getSslContext(uri.getScheme()), WATCH, uri));
-        b.connect(uri.getHost(), getPort(uri)).addListener(new ConnectFutureListener(this, uri));
+        b.handler(new K8sResolverChannelInitializer(this, getSslContext(watchUri.getScheme()), WATCH, watchUri));
+        b.connect(watchUri.getHost(), getPort(watchUri)).addListener(new ConnectFutureListener(this, watchUri));
     }
 
     @Override

@@ -74,11 +74,8 @@ abstract class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.error("K8s resolver fail! Occur an exception !", cause);
-        //json 解析异常
-        if (cause instanceof JsonUtils.JsonParserRuntimeException) {
-            resolverProvider.parseSuccess = false;
-        }
+        log.error("K8s resolver fail! resolver info({}) , Occur an exception !", getResolverInfo(), cause);
+        resolverProvider.parseSuccess = false;
         ctx.close();
     }
 

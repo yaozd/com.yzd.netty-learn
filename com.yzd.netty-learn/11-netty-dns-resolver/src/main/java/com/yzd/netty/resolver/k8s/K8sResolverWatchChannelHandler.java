@@ -29,9 +29,14 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
      * 聚合超时时间
      */
     private static final int AGGREGATOR_TIMEOUT_SECONDS = 10;
-    private static final String LINE_FEED = "\n";
+    /**
+     * 长连接超时时间
+     */
+    private static final int KEEPALIVE_TIMEOUT_SECONDS = 60 * 60;
+    private int keepaliveCount = 0;
     private List<String> contentList = new ArrayList<>();
     private int writeIdleCount = 0;
+
 
     public K8sResolverWatchChannelHandler(K8sResolverProvider resolverProvider, RequestType requestType, URI uri) {
         super(resolverProvider, requestType, uri);
@@ -40,6 +45,9 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
+        if (!ctx.channel().isActive()) {
+            return;
+        }
         if (msg instanceof HttpResponse) {
             HttpResponse httpResponse = (HttpResponse) msg;
             int statusCode = httpResponse.status().code();
@@ -72,26 +80,22 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
                 ctx.close();
                 return;
             }
-            if (LINE_FEED.equals(fullContent)) {
-                log.info("K8s resolver! last chunk data,full content is LINE_FEED,close channel,resolver info({}).", getResolverInfo());
-                ctx.close();
-                return;
-            }
             Map<String, Object> objectMap = JsonUtils.toMap(fullContent);
             if (objectMap == null) {
                 log.error("K8s resolver fail! resolver info({}),objectMap is null,close channel,full content:{}.", getResolverInfo(), fullContent);
+                resolverProvider.parseSuccess = false;
                 ctx.close();
                 return;
             }
             Object object = objectMap.get("object");
             if (object == null) {
-                log.warn("K8s resolver ! no valid object,resolver info({}).", getResolverInfo());
+                log.warn("K8s resolver ! no valid object,resolver info({}),close channel,full content:{}.", getResolverInfo(), fullContent);
                 resolverProvider.parseSuccess = false;
                 ctx.close();
                 return;
             }
             String objectContent = JsonUtils.toJSONString(object);
-            log.info("Object string value:" + objectContent);
+            log.info("Object_string_value:" + objectContent);
             reloadNode(objectContent);
         }
     }
@@ -103,6 +107,7 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
             IdleStateEvent event = (IdleStateEvent) obj;
             if (IdleState.WRITER_IDLE.equals(event.state())) {
                 aggregationTimeout(ctx);
+                //keepaliveTimeout(ctx);
             }
         }
     }
@@ -123,6 +128,20 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
             return;
         }
         writeIdleCount++;
+    }
+
+    /**
+     * 长连接超时操作
+     *
+     * @param ctx
+     */
+    private void keepaliveTimeout(ChannelHandlerContext ctx) {
+        if (keepaliveCount * WRITER_IDLE_TIME_SECOND > KEEPALIVE_TIMEOUT_SECONDS) {
+            log.info("K8s resolver ! keepalive timeout,exceed max {} seconds,resolver info({}).", KEEPALIVE_TIMEOUT_SECONDS, getResolverInfo());
+            ctx.close();
+            return;
+        }
+        keepaliveCount++;
     }
 
 }

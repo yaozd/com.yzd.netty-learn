@@ -4,11 +4,6 @@ import ch.qos.logback.classic.LoggerContext;
 import cn.hutool.core.thread.ThreadUtil;
 import com.yzd.netty.resolver.config.DnsServerConfig;
 import com.yzd.netty.resolver.config.TargetNode;
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.resolver.dns.DefaultDnsCache;
-import io.netty.resolver.dns.DnsCacheEntry;
 import lombok.extern.slf4j.Slf4j;
 import org.databene.contiperf.PerfTest;
 import org.databene.contiperf.junit.ContiPerfRule;
@@ -17,10 +12,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
-import java.util.List;
 
 /**
  * @Author: yaozh

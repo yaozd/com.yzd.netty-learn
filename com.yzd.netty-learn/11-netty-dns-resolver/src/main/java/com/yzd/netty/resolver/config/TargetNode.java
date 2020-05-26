@@ -9,12 +9,17 @@ import java.util.UUID;
  * @Author: yaozh
  * @Description:
  */
+@Getter
 public class TargetNode {
-    @Getter@Setter
+    @Setter
+    public String protocol;
+    @Setter
     public String host;
-    @Getter@Setter
-    public int port=80;
+    @Setter
+    public int port = 80;
+    @Setter
+    public String servicePath;
 
     @Getter
-    public String configVersion=UUID.randomUUID().toString();
+    public String configVersion = UUID.randomUUID().toString();
 }
