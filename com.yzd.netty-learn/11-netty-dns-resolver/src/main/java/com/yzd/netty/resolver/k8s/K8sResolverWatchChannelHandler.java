@@ -43,8 +43,6 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
     private int writeIdleCount = 0;
     private static final String WATCH_JSON_OBJECT = "object";
     private static final String WATCH_JSON_TYPE = "type";
-    private static final String WATCH_DELETED_EVENT = "DELETED";
-    private static final String WATCH_ERROR_EVENT = "ERROR";
 
 
     public K8sResolverWatchChannelHandler(K8sResolverProvider resolverProvider, RequestType requestType, URI uri) {
@@ -91,7 +89,8 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
                 return;
             }
             Map<String, Object> objectMap = JsonUtils.toMap(fullContent);
-            if (checkResponseObject(ctx, fullContent, objectMap)) {
+            //检查失败
+            if (!checkResponseObject(ctx, fullContent, objectMap)) {
                 return;
             }
             Object object = objectMap.get(WATCH_JSON_OBJECT);
@@ -103,7 +102,15 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
 
     /**
      * 检查watch操作的响应数据
-     *
+     * https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/
+     * GET /api/v1/watch/namespaces/
+     * -------------------------------------------------------------------
+     * WatchEvent
+     * https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#watchevent-v1-meta
+     * Object is:
+     * * If Type is Added or Modified: the new state of the object.
+     * * If Type is Deleted: the state of the object immediately before deletion.
+     * * If Type is Error: *Status is recommended; other types may make sense depending on context.
      * @param ctx
      * @param fullContent
      * @param objectMap
@@ -115,22 +122,30 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
                     , getResolverInfo(), fullContent);
             resolverProvider.parseSuccess = false;
             ctx.close();
+            return false;
+        }
+        String eventStr = String.valueOf(objectMap.get(WATCH_JSON_TYPE));
+        EventType event = EventType.getByType(eventStr);
+        if (EventType.ADDED.equals(event) || EventType.MODIFIED.equals(event)) {
             return true;
         }
-        Object event = objectMap.get(WATCH_JSON_TYPE);
-        if (WATCH_ERROR_EVENT.equalsIgnoreCase(String.valueOf(event))) {
+        if (EventType.DELETED.equals(event)) {
+            log.warn("K8s resolver! resolver info({}),close the channel when got DELETED event,full content:{}."
+                    , getResolverInfo(), fullContent);
+            ctx.close();
+            return false;
+        }
+        if (EventType.ERROR.equals(event)) {
             log.error("K8s resolver fail! resolver info({}),close the channel when got ERROR event,full content:{}."
                     , getResolverInfo(), fullContent);
             resolverProvider.parseSuccess = false;
             ctx.close();
-            return true;
+            return false;
         }
-        if (WATCH_DELETED_EVENT.equalsIgnoreCase(String.valueOf(event))) {
-            log.warn("K8s resolver! resolver info({}),close the channel when got DELETED event,full content:{}."
-                    , getResolverInfo(), fullContent);
-            ctx.close();
-            return true;
-        }
+        log.error("K8s resolver fail! resolver info({}),close the channel when unrecognized event,full content:{}."
+                , getResolverInfo(), fullContent);
+        resolverProvider.parseSuccess = false;
+        ctx.close();
         return false;
     }
 
