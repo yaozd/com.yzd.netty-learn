@@ -33,8 +33,10 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
      * 长连接超时时间
      * 默认情况下：K8S的watch api有效长连接为1小时，当到达1小时后K8S会发送last chunk data ，
      * 此时客户端需要关闭当前连接。但如果使用长连接超时时间小于1小时相当于忽略了last chunk data 相关的处理逻辑。
+     *
+     * 最大监听时长，暂定设置为1分钟
      */
-    private static final int KEEPALIVE_TIMEOUT_SECONDS = 60 * 60;
+    private static final int KEEPALIVE_TIMEOUT_SECONDS = 60;
     private int keepaliveCount = 0;
     private List<String> contentList = new ArrayList<>();
     private int writeIdleCount = 0;
@@ -105,7 +107,7 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
             IdleStateEvent event = (IdleStateEvent) obj;
             if (IdleState.WRITER_IDLE.equals(event.state())) {
                 aggregationTimeout(ctx);
-                //keepaliveTimeout(ctx);
+                keepaliveTimeout(ctx);
             }
         }
     }
@@ -120,7 +122,8 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
             return;
         }
         if (writeIdleCount * WRITER_IDLE_TIME_SECOND > CHUNK_DATA_AGGREGATOR_TIMEOUT_SECONDS) {
-            log.error("K8s resolver ! aggregator timeout,exceed max {} seconds,resolver info({}).", CHUNK_DATA_AGGREGATOR_TIMEOUT_SECONDS, getResolverInfo());
+            log.error("K8s resolver ! aggregator timeout,close the channel after exceed max aggregation time {} seconds ,resolver info({})."
+                    , CHUNK_DATA_AGGREGATOR_TIMEOUT_SECONDS, getResolverInfo());
             resolverProvider.parseSuccess = false;
             ctx.close();
             return;
@@ -135,7 +138,8 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
      */
     private void keepaliveTimeout(ChannelHandlerContext ctx) {
         if (keepaliveCount * WRITER_IDLE_TIME_SECOND > KEEPALIVE_TIMEOUT_SECONDS) {
-            log.info("K8s resolver ! keepalive timeout,exceed max {} seconds,resolver info({}).", KEEPALIVE_TIMEOUT_SECONDS, getResolverInfo());
+            log.info("K8s resolver ! keepalive timeout,close the channel after exceed max listening time {} seconds ,resolver info({})."
+                    , KEEPALIVE_TIMEOUT_SECONDS, getResolverInfo());
             ctx.close();
             return;
         }

@@ -23,10 +23,10 @@ public class K8sResolverHttpsTest {
         String tokenPath = "\\data\\token";
         K8sConfig k8sConfig = new K8sConfig();
         k8sConfig.getTokens().add(new K8sTokenConfig(host, tokenPath));
-        K8sTokenProvider.init(k8sConfig);
+        K8sTokenStorage.init(k8sConfig);
         targetNode = new TargetNode();
-        targetNode.setHost(host);
         targetNode.setProtocol("https");
+        targetNode.setHost(host);
         targetNode.setPort(6443);
         targetNode.setServicePath("default/my-nginx");
         targetNode.setPortType("http");
@@ -36,7 +36,7 @@ public class K8sResolverHttpsTest {
     public void queryTest() {
         K8sResolverProvider resolverProvider = new K8sResolverProvider(targetNode);
         resolverProvider.query();
-        ThreadUtil.sleep(1000 * 500000);
+        ThreadUtil.sleep(1000 * 5000000);
     }
 
     @Test
