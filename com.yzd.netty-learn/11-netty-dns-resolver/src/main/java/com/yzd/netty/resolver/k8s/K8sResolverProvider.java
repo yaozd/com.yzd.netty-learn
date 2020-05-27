@@ -55,7 +55,9 @@ public class K8sResolverProvider extends BaseResolverProvider {
     private void init(TargetNode targetNode) {
         String[] pathSplits = StringUtils.split(targetNode.getServicePath(), "/");
         if (pathSplits == null || pathSplits.length != 2) {
-            throw new IllegalArgumentException("Target node service path invalid ! service path:" + targetNode.getServicePath());
+            String errorMsg = String.format("Target node service path invalid ! resolver info(host:%s) ,service path:%s"
+                    , targetNode.getHost(), targetNode.getServicePath());
+            throw new IllegalArgumentException(errorMsg);
         }
         String queryUrl = String.format(QUERY_URL_TEMPLATE, targetNode.getProtocol(), targetNode.getHost(), targetNode.getPort(), pathSplits[0], pathSplits[1]);
         queryUri = createUri(queryUrl);
@@ -186,7 +188,7 @@ public class K8sResolverProvider extends BaseResolverProvider {
         }
 
         private void setAuthorizationHeader(Map<CharSequence, Object> header, URI uri) {
-            String token = K8sTokenProvider.getInstance().getToken(uri.getHost());
+            String token = K8sTokenStorage.getInstance().getToken(uri.getHost());
             if (StringUtils.isBlank(token)) {
                 return;
             }
