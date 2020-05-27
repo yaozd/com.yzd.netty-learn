@@ -25,6 +25,7 @@ import static com.yzd.netty.resolver.k8s.RequestType.QUERY;
 abstract class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
 
     protected static final int SUCCESS_CODE = 200;
+    protected static final int NOT_FOUND_CODE = 404;
     protected final K8sResolverProvider resolverProvider;
     protected final RequestType requestType;
     protected final URI uri;
@@ -90,7 +91,7 @@ abstract class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
     protected Map<String, Set<InetSocketAddress>> parseAddress(String content) {
         K8sServiceInfo k8sServiceInfo = JsonUtils.toJavaObject(content, K8sServiceInfo.class);
         if (k8sServiceInfo == null || k8sServiceInfo.getSubsets() == null || k8sServiceInfo.getSubsets().isEmpty()) {
-            log.warn("K8s resolver fail! no valid address,resolver info({}).", getResolverInfo());
+            log.warn("K8s resolver fail! resolver info({}) ,no address ,full content:{}.", getResolverInfo(), content);
             return Collections.emptyMap();
         }
         Map<String, Set<InetSocketAddress>> addressMap = new HashMap<>();

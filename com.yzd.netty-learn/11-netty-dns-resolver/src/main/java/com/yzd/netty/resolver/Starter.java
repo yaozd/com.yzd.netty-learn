@@ -18,7 +18,7 @@ public class Starter {
         targetNode.setProtocol("http");
         targetNode.setHost("192.168.56.102");
         targetNode.setPort(8080);
-        targetNode.setServicePath("default/my-nginx");
+        targetNode.setServicePath("default/temp-nginx");
         //
         K8sResolverProvider resolverProvider = new K8sResolverProvider(targetNode);
         resolverProvider.query();

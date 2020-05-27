@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.yzd.netty.resolver.k8s.K8sResolverProvider.READER_IDLE_TIME_SECOND;
 import static com.yzd.netty.resolver.k8s.K8sResolverProvider.WRITER_IDLE_TIME_SECOND;
 import static io.netty.util.CharsetUtil.UTF_8;
 
@@ -33,7 +34,7 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
      * 长连接超时时间
      * 默认情况下：K8S的watch api有效长连接为1小时，当到达1小时后K8S会发送last chunk data ，
      * 此时客户端需要关闭当前连接。但如果使用长连接超时时间小于1小时相当于忽略了last chunk data 相关的处理逻辑。
-     *
+     * <p>
      * 最大监听时长，暂定设置为1分钟
      */
     private static final int KEEPALIVE_TIMEOUT_SECONDS = 60;
@@ -41,12 +42,14 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
     private List<String> contentList = new ArrayList<>();
     private int writeIdleCount = 0;
     private static final String WATCH_JSON_OBJECT = "object";
+    private static final String WATCH_JSON_TYPE = "type";
+    private static final String WATCH_DELETED_EVENT = "DELETED";
+    private static final String WATCH_ERROR_EVENT = "ERROR";
 
 
     public K8sResolverWatchChannelHandler(K8sResolverProvider resolverProvider, RequestType requestType, URI uri) {
         super(resolverProvider, requestType, uri);
     }
-
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
@@ -82,15 +85,13 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
             //Chunk模式应答以0长度的块（ "0\r\n\r\n".）结束
             //默认情况下：K8S的watch api有效长连接为1小时，当到达1小时后K8S会发送last chunk data ，此时客户端需要关闭当前连接。
             if (StringUtils.isBlank(fullContent)) {
-                log.info("K8s resolver! last chunk data,full content is blank,close channel,resolver info({}).", getResolverInfo());
+                log.info("K8s resolver! last chunk data,full content is blank,close channel,resolver info({})."
+                        , getResolverInfo());
                 ctx.close();
                 return;
             }
             Map<String, Object> objectMap = JsonUtils.toMap(fullContent);
-            if (objectMap == null || objectMap.get(WATCH_JSON_OBJECT) == null) {
-                log.error("K8s resolver fail! resolver info({}),no valid object,close channel,full content:{}.", getResolverInfo(), fullContent);
-                resolverProvider.parseSuccess = false;
-                ctx.close();
+            if (checkResponseObject(ctx, fullContent, objectMap)) {
                 return;
             }
             Object object = objectMap.get(WATCH_JSON_OBJECT);
@@ -100,6 +101,39 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
         }
     }
 
+    /**
+     * 检查watch操作的响应数据
+     *
+     * @param ctx
+     * @param fullContent
+     * @param objectMap
+     * @return
+     */
+    private boolean checkResponseObject(ChannelHandlerContext ctx, String fullContent, Map<String, Object> objectMap) {
+        if (objectMap == null || objectMap.get(WATCH_JSON_OBJECT) == null) {
+            log.error("K8s resolver fail! resolver info({}),close the channel when no valid object,full content:{}."
+                    , getResolverInfo(), fullContent);
+            resolverProvider.parseSuccess = false;
+            ctx.close();
+            return true;
+        }
+        Object event = objectMap.get(WATCH_JSON_TYPE);
+        if (WATCH_ERROR_EVENT.equalsIgnoreCase(String.valueOf(event))) {
+            log.error("K8s resolver fail! resolver info({}),close the channel when got ERROR event,full content:{}."
+                    , getResolverInfo(), fullContent);
+            resolverProvider.parseSuccess = false;
+            ctx.close();
+            return true;
+        }
+        if (WATCH_DELETED_EVENT.equalsIgnoreCase(String.valueOf(event))) {
+            log.warn("K8s resolver! resolver info({}),close the channel when got DELETED event,full content:{}."
+                    , getResolverInfo(), fullContent);
+            ctx.close();
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object obj) {
         super.userEventTriggered(ctx, obj);
@@ -107,6 +141,8 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
             IdleStateEvent event = (IdleStateEvent) obj;
             if (IdleState.WRITER_IDLE.equals(event.state())) {
                 aggregationTimeout(ctx);
+            }
+            if (IdleState.READER_IDLE.equals(event.state())) {
                 keepaliveTimeout(ctx);
             }
         }
@@ -137,13 +173,13 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
      * @param ctx
      */
     private void keepaliveTimeout(ChannelHandlerContext ctx) {
-        if (keepaliveCount * WRITER_IDLE_TIME_SECOND > KEEPALIVE_TIMEOUT_SECONDS) {
+        keepaliveCount++;
+        if (keepaliveCount * READER_IDLE_TIME_SECOND >= KEEPALIVE_TIMEOUT_SECONDS) {
             log.info("K8s resolver ! keepalive timeout,close the channel after exceed max listening time {} seconds ,resolver info({})."
                     , KEEPALIVE_TIMEOUT_SECONDS, getResolverInfo());
             ctx.close();
             return;
         }
-        keepaliveCount++;
     }
 
 }

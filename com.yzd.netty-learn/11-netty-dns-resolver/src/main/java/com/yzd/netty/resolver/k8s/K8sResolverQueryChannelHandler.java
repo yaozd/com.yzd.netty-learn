@@ -8,6 +8,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
+import java.util.Collections;
 
 import static io.netty.util.CharsetUtil.UTF_8;
 
@@ -33,6 +34,10 @@ public class K8sResolverQueryChannelHandler extends K8sResolverChannelHandler {
             String content = httpResponse.content().toString(UTF_8);
             log.info("HTTP_CONTENT:" + content);
             if (statusCode != SUCCESS_CODE) {
+                if (statusCode == NOT_FOUND_CODE) {
+                    //clear node data
+                    resolverProvider.reloadNode(Collections.emptySet());
+                }
                 StringBuilder errorMsg = new StringBuilder()
                         .append("response code:").append(statusCode)
                         .append(",content:").append(content);
