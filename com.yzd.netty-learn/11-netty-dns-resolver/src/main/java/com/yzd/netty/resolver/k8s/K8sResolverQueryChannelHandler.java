@@ -58,6 +58,7 @@ public class K8sResolverQueryChannelHandler extends K8sResolverChannelHandler {
             IdleStateEvent event = (IdleStateEvent) obj;
             if (IdleState.READER_IDLE.equals(event.state())) {
                 log.error("K8s resolver fail! read timeout!,resolver info({}).", getResolverInfo());
+                resolverProvider.parseSuccess = false;
                 ctx.close();
             }
         }
