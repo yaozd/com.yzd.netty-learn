@@ -96,6 +96,10 @@ abstract class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
         }
         Map<String, Set<InetSocketAddress>> addressMap = new HashMap<>();
         for (K8sServiceSubsets subset : k8sServiceInfo.getSubsets()) {
+            //处理：subsets":[{"notReadyAddresses":………………的情况
+            if (subset.getPorts() == null || subset.getAddresses() == null) {
+                continue;
+            }
             for (K8sServicePort port : subset.getPorts()) {
                 Set<InetSocketAddress> addressSet = addressMap.computeIfAbsent(port.getName(), key -> new HashSet<InetSocketAddress>());
                 for (K8sServiceAddress address : subset.getAddresses()) {

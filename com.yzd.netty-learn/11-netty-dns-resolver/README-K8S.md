@@ -10,3 +10,8 @@
  * * If Type is Deleted: the state of the object immediately before deletion.
  * * If Type is Error: *Status is recommended; other types may make sense depending on context.
 ```
+
+### 抖动场景
+```
+kubectl delete pod --all --force --grace-period=0
+```
