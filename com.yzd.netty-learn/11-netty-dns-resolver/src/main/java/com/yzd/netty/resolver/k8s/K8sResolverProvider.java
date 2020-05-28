@@ -50,6 +50,7 @@ public class K8sResolverProvider extends BaseResolverProvider {
     public K8sResolverProvider(TargetNode targetNode) {
         super(targetNode);
         init(targetNode);
+        //scheduledFuture = workerGroup.schedule(this::query, 0, MILLISECONDS);
     }
 
     private void init(TargetNode targetNode) {

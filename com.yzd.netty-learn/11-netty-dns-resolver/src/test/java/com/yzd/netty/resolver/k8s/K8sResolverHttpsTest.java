@@ -15,7 +15,7 @@ import org.junit.Test;
 @Slf4j
 public class K8sResolverHttpsTest {
 
-    private static TargetNode targetNode;
+    private static TargetNode targetNode = new TargetNode();
 
     @BeforeClass
     public static void beforeTest() {
@@ -24,7 +24,6 @@ public class K8sResolverHttpsTest {
         K8sConfig k8sConfig = new K8sConfig();
         k8sConfig.getTokens().add(new K8sTokenConfig(host, tokenPath));
         K8sTokenStorage.init(k8sConfig);
-        targetNode = new TargetNode();
         targetNode.setProtocol("https");
         targetNode.setHost(host);
         targetNode.setPort(6443);

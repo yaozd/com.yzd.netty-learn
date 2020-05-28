@@ -12,11 +12,10 @@ import org.junit.Test;
  */
 @Slf4j
 public class K8sResolverProviderTest {
-    private static TargetNode targetNode;
+    private static TargetNode targetNode = new TargetNode();
 
     @BeforeClass
     public static void beforeTest() {
-        targetNode = new TargetNode();
         targetNode.setProtocol("http");
         targetNode.setHost("192.168.56.102");
         targetNode.setPort(8080);
