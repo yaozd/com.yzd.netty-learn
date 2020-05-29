@@ -20,11 +20,18 @@ public class HttpRequestUtil {
 
     }
 
-    public static DefaultFullHttpRequest createFullHttpRequest(URI uri, HttpVersion httpVersion, HttpMethod httpMethod,  Map<CharSequence, Object> headers) {
+    public static DefaultFullHttpRequest createFullHttpRequest(URI uri,
+                                                               HttpVersion httpVersion,
+                                                               HttpMethod httpMethod,
+                                                               Map<CharSequence, Object> headers) {
         return createFullHttpRequest(uri, httpVersion, httpMethod, headers, null, null);
     }
 
-    public static DefaultFullHttpRequest createFullHttpRequest(URI uri, HttpVersion httpVersion, HttpMethod httpMethod,  Map<CharSequence, Object> headers, String body, String bodyEncoding) {
+    public static DefaultFullHttpRequest createFullHttpRequest(URI uri,
+                                                               HttpVersion httpVersion,
+                                                               HttpMethod httpMethod,
+                                                               Map<CharSequence, Object> headers,
+                                                               String body, String bodyEncoding) {
         DefaultFullHttpRequest request;
         if (StringUtil.isNullOrEmpty(body)) {
             request = new DefaultFullHttpRequest(httpVersion, httpMethod, uri.getRawPath());
@@ -38,7 +45,10 @@ public class HttpRequestUtil {
 
     }
 
-    public static DefaultFullHttpRequest createFullHttpRequest(URI uri, HttpVersion httpVersion, HttpMethod httpMethod,  Map<CharSequence, Object> headers, ByteBuf body) {
+    public static DefaultFullHttpRequest createFullHttpRequest(URI uri,
+                                                               HttpVersion httpVersion,
+                                                               HttpMethod httpMethod,
+                                                               Map<CharSequence, Object> headers, ByteBuf body) {
         DefaultFullHttpRequest request;
         if (body == null) {
             request = new DefaultFullHttpRequest(httpVersion, httpMethod, uri.getRawPath());

@@ -20,7 +20,7 @@ public class TargetNode {
     @Setter
     public String servicePath;
     @Setter
-    public String portType="http";
+    public String portType = "http";
 
     @Getter
     public String configVersion = UUID.randomUUID().toString();

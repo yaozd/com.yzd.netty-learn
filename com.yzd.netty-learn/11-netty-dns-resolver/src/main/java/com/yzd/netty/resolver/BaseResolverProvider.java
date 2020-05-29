@@ -19,9 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class BaseResolverProvider implements ResolverProvider {
 
     private static final int MAX_REWIND_SIZE = 1000000;
-    private AtomicInteger currentCount = new AtomicInteger(0);
     @Getter
     protected TargetNode targetNode;
+    private AtomicInteger currentCount = new AtomicInteger(0);
     @Getter
     private volatile Set<InetSocketAddress> nodeSet = new HashSet<>(10);
     private volatile InetSocketAddress[] nodeArray = {};

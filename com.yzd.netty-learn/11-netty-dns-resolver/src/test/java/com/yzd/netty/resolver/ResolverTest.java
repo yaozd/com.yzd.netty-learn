@@ -9,7 +9,7 @@ import org.junit.Test;
 public class ResolverTest {
     @Test
     public void resolverTest() {
-        Resolver resolver=new Resolver();
+        Resolver resolver = new Resolver();
         resolver.doSelect();
     }
 }

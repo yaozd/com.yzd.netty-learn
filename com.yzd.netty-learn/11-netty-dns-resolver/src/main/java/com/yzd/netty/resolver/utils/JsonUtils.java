@@ -22,9 +22,6 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class JsonUtils {
-    private JsonUtils() {
-    }
-
     private final static ObjectMapper mapper;
 
     /**
@@ -44,6 +41,9 @@ public class JsonUtils {
         mapper.configure(JsonParser.Feature.ALLOW_NUMERIC_LEADING_ZEROS, true);
         // 允许字符串中存在回车换行控制符
         mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
+    }
+
+    private JsonUtils() {
     }
 
     public static String toJSONString(Object obj) {

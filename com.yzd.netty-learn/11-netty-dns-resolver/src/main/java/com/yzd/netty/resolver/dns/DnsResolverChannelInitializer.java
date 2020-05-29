@@ -17,9 +17,10 @@ public class DnsResolverChannelInitializer extends ChannelInitializer<DatagramCh
 
     private final DnsResolverProvider resolverProvider;
 
-    public DnsResolverChannelInitializer(DnsResolverProvider resolverProvider){
-        this.resolverProvider=resolverProvider;
+    public DnsResolverChannelInitializer(DnsResolverProvider resolverProvider) {
+        this.resolverProvider = resolverProvider;
     }
+
     @Override
     protected void initChannel(DatagramChannel ch) throws Exception {
         ChannelPipeline p = ch.pipeline();

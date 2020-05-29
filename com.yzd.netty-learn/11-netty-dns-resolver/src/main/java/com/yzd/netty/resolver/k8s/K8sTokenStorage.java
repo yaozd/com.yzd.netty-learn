@@ -50,7 +50,7 @@ public class K8sTokenStorage {
                         , token.getHost(), token.getTokenPath(), e.toString());
                 throw new RuntimeException(errorMsg, e);
             }
-            log.info("K8s token load success! token config info(host:{},tokenPath:{})",token.getHost(),token.getTokenPath());
+            log.info("K8s token load success! token config info(host:{},tokenPath:{})", token.getHost(), token.getTokenPath());
         }
     }
 
@@ -59,7 +59,7 @@ public class K8sTokenStorage {
     }
 
     private String readToken(String tokenPath) throws IOException {
-        if(StringUtils.isBlank(tokenPath)){
+        if (StringUtils.isBlank(tokenPath)) {
             throw new RuntimeException("tokenPath is blank!");
         }
         tokenPath = StringUtils.replace(tokenPath, "/", File.separator);

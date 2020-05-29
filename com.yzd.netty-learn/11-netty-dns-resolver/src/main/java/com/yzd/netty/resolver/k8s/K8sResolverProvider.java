@@ -35,10 +35,10 @@ import static com.yzd.netty.resolver.k8s.RequestType.WATCH;
  */
 @Slf4j
 public class K8sResolverProvider extends BaseResolverProvider {
+    protected static final long READER_IDLE_TIME = 30L * 1000L;
+    protected static final long WRITER_IDLE_TIME = 5L * 1000L;
     private static final String QUERY_URL_TEMPLATE = "%s://%s:%d/api/v1/namespaces/%s/endpoints/%s";
     private static final String WATCH_URL_TEMPLATE = "%s://%s:%d/api/v1/watch/namespaces/%s/endpoints/%s";
-    protected static final long READER_IDLE_TIME_SECOND = 60L;
-    protected static final long WRITER_IDLE_TIME_SECOND = 5L;
     private static final int MAX_FAST_CONNECTION_COUNT = 10;
     protected boolean parseSuccess = true;
     private EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -60,10 +60,12 @@ public class K8sResolverProvider extends BaseResolverProvider {
                     , targetNode.getHost(), targetNode.getServicePath());
             throw new IllegalArgumentException(errorMsg);
         }
-        String queryUrl = String.format(QUERY_URL_TEMPLATE, targetNode.getProtocol(), targetNode.getHost(), targetNode.getPort(), pathSplits[0], pathSplits[1]);
+        String queryUrl = String.format(QUERY_URL_TEMPLATE,
+                targetNode.getProtocol(), targetNode.getHost(), targetNode.getPort(), pathSplits[0], pathSplits[1]);
         queryUri = createUri(queryUrl);
         log.debug(queryUri.toString());
-        String watchUrl = String.format(WATCH_URL_TEMPLATE, targetNode.getProtocol(), targetNode.getHost(), targetNode.getPort(), pathSplits[0], pathSplits[1]);
+        String watchUrl = String.format(WATCH_URL_TEMPLATE,
+                targetNode.getProtocol(), targetNode.getHost(), targetNode.getPort(), pathSplits[0], pathSplits[1]);
         watchUri = createUri(watchUrl);
         log.debug(watchUri.toString());
     }
@@ -184,7 +186,8 @@ public class K8sResolverProvider extends BaseResolverProvider {
             if (HttpScheme.HTTPS.name().contentEqualsIgnoreCase(uri.getScheme())) {
                 setAuthorizationHeader(header, uri);
             }
-            DefaultFullHttpRequest request = HttpRequestUtil.createFullHttpRequest(uri, HttpVersion.HTTP_1_1, HttpMethod.GET, header);
+            DefaultFullHttpRequest request =
+                    HttpRequestUtil.createFullHttpRequest(uri, HttpVersion.HTTP_1_1, HttpMethod.GET, header);
             newChannel.writeAndFlush(request);
         }
 

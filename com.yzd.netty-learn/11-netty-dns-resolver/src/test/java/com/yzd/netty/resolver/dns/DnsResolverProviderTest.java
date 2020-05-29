@@ -20,10 +20,9 @@ import java.net.InetSocketAddress;
  */
 @Slf4j
 public class DnsResolverProviderTest {
+    private static TargetNode targetNode = new TargetNode();
     @Rule
     public ContiPerfRule contiPerfRule = new ContiPerfRule();
-
-    private static TargetNode targetNode = new TargetNode();
 
     @BeforeClass
     public static void runBeforeTestMethod() {

@@ -11,8 +11,8 @@ import io.netty.handler.timeout.IdleStateHandler;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
-import static com.yzd.netty.resolver.k8s.K8sResolverProvider.READER_IDLE_TIME_SECOND;
-import static com.yzd.netty.resolver.k8s.K8sResolverProvider.WRITER_IDLE_TIME_SECOND;
+import static com.yzd.netty.resolver.k8s.K8sResolverProvider.READER_IDLE_TIME;
+import static com.yzd.netty.resolver.k8s.K8sResolverProvider.WRITER_IDLE_TIME;
 import static com.yzd.netty.resolver.k8s.RequestType.QUERY;
 import static com.yzd.netty.resolver.k8s.RequestType.WATCH;
 
@@ -26,7 +26,9 @@ public class K8sResolverChannelInitializer extends ChannelInitializer<Channel> {
     private final K8sResolverProvider resolverProvider;
     private final URI uri;
 
-    public K8sResolverChannelInitializer(K8sResolverProvider resolverProvider, SslContext sslCtx, RequestType requestType, URI uri) {
+    public K8sResolverChannelInitializer(
+            K8sResolverProvider resolverProvider,
+            SslContext sslCtx, RequestType requestType, URI uri) {
         this.resolverProvider = resolverProvider;
         this.sslCtx = sslCtx;
         this.requestType = requestType;
@@ -39,7 +41,8 @@ public class K8sResolverChannelInitializer extends ChannelInitializer<Channel> {
         if (sslCtx != null) {
             ch.pipeline().addLast(sslCtx.newHandler(ch.alloc()));
         }
-        ch.pipeline().addLast(new IdleStateHandler(READER_IDLE_TIME_SECOND, WRITER_IDLE_TIME_SECOND, 0, TimeUnit.SECONDS));
+        ch.pipeline().addLast(
+                new IdleStateHandler(READER_IDLE_TIME, WRITER_IDLE_TIME, 0, TimeUnit.MILLISECONDS));
         if (QUERY.equals(requestType)) {
             ch.pipeline().addLast(new HttpClientCodec());
             //10MB

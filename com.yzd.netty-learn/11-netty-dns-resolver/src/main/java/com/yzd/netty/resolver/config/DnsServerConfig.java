@@ -9,8 +9,10 @@ import lombok.Setter;
  */
 
 public class DnsServerConfig {
-    @Getter@Setter
+    @Getter
+    @Setter
     private String hostname;
-    @Getter@Setter
-    private int port=53;
+    @Getter
+    @Setter
+    private int port = 53;
 }

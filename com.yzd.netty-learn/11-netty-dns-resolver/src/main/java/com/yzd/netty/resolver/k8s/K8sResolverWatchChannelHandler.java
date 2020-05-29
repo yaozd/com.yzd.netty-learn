@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.yzd.netty.resolver.k8s.K8sResolverProvider.READER_IDLE_TIME_SECOND;
-import static com.yzd.netty.resolver.k8s.K8sResolverProvider.WRITER_IDLE_TIME_SECOND;
+import static com.yzd.netty.resolver.k8s.K8sResolverProvider.READER_IDLE_TIME;
+import static com.yzd.netty.resolver.k8s.K8sResolverProvider.WRITER_IDLE_TIME;
 import static io.netty.util.CharsetUtil.UTF_8;
 
 /**
@@ -29,7 +29,7 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
     /**
      * 聚合超时时间
      */
-    private static final int CHUNK_DATA_AGGREGATOR_TIMEOUT_SECONDS = 10;
+    private static final int CHUNK_DATA_AGGREGATOR_TIMEOUT = 10 * 1000;
     /**
      * 长连接超时时间
      * 默认情况下：K8S的watch api有效长连接为1小时，当到达1小时后K8S会发送last chunk data ，
@@ -37,12 +37,12 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
      * <p>
      * 最大监听时长，暂定设置为1分钟
      */
-    private static final int KEEPALIVE_TIMEOUT_SECONDS = 60;
+    private static final int KEEPALIVE_TIMEOUT = 60 * 1000;
+    private static final String WATCH_JSON_OBJECT = "object";
+    private static final String WATCH_JSON_TYPE = "type";
     private int keepaliveCount = 0;
     private List<String> contentList = new ArrayList<>();
     private int writeIdleCount = 0;
-    private static final String WATCH_JSON_OBJECT = "object";
-    private static final String WATCH_JSON_TYPE = "type";
 
 
     public K8sResolverWatchChannelHandler(K8sResolverProvider resolverProvider, RequestType requestType, URI uri) {
@@ -81,7 +81,8 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
             contentList.clear();
             log.info("HTTP_FULL_CONTENT:" + fullContent);
             //Chunk模式应答以0长度的块（ "0\r\n\r\n".）结束
-            //默认情况下：K8S的watch api有效长连接为1小时，当到达1小时后K8S会发送last chunk data ，此时客户端需要关闭当前连接。
+            //默认情况下：K8S的watch api有效长连接为1小时，当到达1小时后K8S会发送last chunk data ，
+            //此时客户端需要关闭当前连接。
             if (StringUtils.isBlank(fullContent)) {
                 log.info("K8s resolver! last chunk data,full content is blank,close channel,resolver info({})."
                         , getResolverInfo());
@@ -98,6 +99,7 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
             log.info("Object_string_value:" + objectContent);
             reloadNode(objectContent);
         }
+        keepaliveCount = 0;
     }
 
     /**
@@ -111,6 +113,7 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
      * * If Type is Added or Modified: the new state of the object.
      * * If Type is Deleted: the state of the object immediately before deletion.
      * * If Type is Error: *Status is recommended; other types may make sense depending on context.
+     *
      * @param ctx
      * @param fullContent
      * @param objectMap
@@ -172,9 +175,10 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
         if (contentList.isEmpty()) {
             return;
         }
-        if (writeIdleCount * WRITER_IDLE_TIME_SECOND > CHUNK_DATA_AGGREGATOR_TIMEOUT_SECONDS) {
-            log.error("K8s resolver ! aggregator timeout,close the channel after exceed max aggregation time {} seconds ,resolver info({})."
-                    , CHUNK_DATA_AGGREGATOR_TIMEOUT_SECONDS, getResolverInfo());
+        if (writeIdleCount * WRITER_IDLE_TIME > CHUNK_DATA_AGGREGATOR_TIMEOUT) {
+            log.error("K8s resolver ! aggregator timeout," +
+                            "close the channel after exceed max aggregation time {} milliseconds,resolver info({})."
+                    , CHUNK_DATA_AGGREGATOR_TIMEOUT, getResolverInfo());
             resolverProvider.parseSuccess = false;
             ctx.close();
             return;
@@ -189,9 +193,10 @@ public class K8sResolverWatchChannelHandler extends K8sResolverChannelHandler {
      */
     private void keepaliveTimeout(ChannelHandlerContext ctx) {
         keepaliveCount++;
-        if (keepaliveCount * READER_IDLE_TIME_SECOND >= KEEPALIVE_TIMEOUT_SECONDS) {
-            log.info("K8s resolver ! keepalive timeout,close the channel after exceed max listening time {} seconds ,resolver info({})."
-                    , KEEPALIVE_TIMEOUT_SECONDS, getResolverInfo());
+        if (keepaliveCount * READER_IDLE_TIME >= KEEPALIVE_TIMEOUT) {
+            log.info("K8s resolver ! keepalive timeout," +
+                            "close the channel after exceed max listening time {} milliseconds ,resolver info({})."
+                    , KEEPALIVE_TIMEOUT, getResolverInfo());
             ctx.close();
             return;
         }

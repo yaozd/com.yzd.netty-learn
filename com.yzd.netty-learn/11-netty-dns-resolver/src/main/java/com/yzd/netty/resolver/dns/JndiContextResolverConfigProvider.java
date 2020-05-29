@@ -18,7 +18,7 @@ import java.util.*;
 @Slf4j
 public class JndiContextResolverConfigProvider {
 
-    private static final JndiContextResolverConfigProvider mInstance=new JndiContextResolverConfigProvider();
+    private static final JndiContextResolverConfigProvider mInstance = new JndiContextResolverConfigProvider();
     private List<InetSocketAddress> nameServers = new ArrayList<>(3);
 
     private JndiContextResolverConfigProvider() {
