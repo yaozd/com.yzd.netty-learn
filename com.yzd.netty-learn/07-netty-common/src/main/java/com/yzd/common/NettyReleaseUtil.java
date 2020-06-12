@@ -1,11 +1,12 @@
-package com.yzd.netty;
+package com.yzd.common;
 
 import io.netty.util.ReferenceCounted;
 
 /**
- * 释放数据
+ * @Author: yaozh
+ * @Description:
  */
-public class App {
+public class NettyReleaseUtil {
     /**
      * 释放数据，防止Netty的ByteBuff内存泄漏问题
      * netty LEAK: ByteBuf.release() was not called before it's garbage-collected

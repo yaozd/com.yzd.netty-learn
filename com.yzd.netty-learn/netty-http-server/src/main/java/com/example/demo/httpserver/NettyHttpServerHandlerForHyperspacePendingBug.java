@@ -33,7 +33,7 @@ public class NettyHttpServerHandlerForHyperspacePendingBug extends SimpleChannel
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, FullHttpRequest fullHttpRequest) {
         System.out.println(fullHttpRequest);
-
+        System.out.println("引用计数："+fullHttpRequest.refCnt());
         FullHttpResponse response = null;
         if (fullHttpRequest.getMethod() == HttpMethod.GET) {
             System.out.println(getGetParamsFromChannel(fullHttpRequest));
