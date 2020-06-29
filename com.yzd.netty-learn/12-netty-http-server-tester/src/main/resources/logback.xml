@@ -13,13 +13,15 @@
        %n:输出一个换行符号
    -->
     <contextName>logback</contextName>
+    <!--jvm 启动参数如下: -Dapp.log.level=info-->
+    <property name="LOG_LEVEL" value="${app.log.level:-info}"/>
     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{5}.%M\(%F:%L\)|- %msg %n
             </pattern>
         </encoder>
     </appender>
-    <root level="INFO">
+    <root level="${LOG_LEVEL}">
         <appender-ref ref="stdout"/>
     </root>
 </configuration>
