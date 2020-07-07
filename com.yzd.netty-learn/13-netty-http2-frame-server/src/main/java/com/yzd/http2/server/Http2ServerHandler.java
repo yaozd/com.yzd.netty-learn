@@ -3,6 +3,7 @@ package com.yzd.http2.server;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http2.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
@@ -15,6 +16,21 @@ public class Http2ServerHandler extends ChannelDuplexHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         objectList.add(msg);
+        //todo 方便调试
+        /*
+        if(msg instanceof Http2Frame){
+            String name = ((Http2Frame) msg).name();
+            log.info("Frame-name:"+name);
+        }
+        if(msg instanceof Http2HeadersFrame){
+
+        }
+        if(msg instanceof Http2DataFrame){
+            boolean endStream = ((Http2DataFrame) msg).isEndStream();
+        }
+        if(msg instanceof Http2StreamFrame){
+
+        }*/
     }
 
     @Override
