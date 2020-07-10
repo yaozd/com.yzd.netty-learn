@@ -1,37 +1,39 @@
-package com.yzd.http2.server;
+package com.yzd.http2.proxy;
 
 import io.netty.buffer.ByteBufHolder;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http2.*;
+import io.netty.handler.codec.http2.Http2Frame;
+import io.netty.handler.codec.http2.Http2SettingsAckFrame;
+import io.netty.handler.codec.http2.Http2SettingsFrame;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * @author yaozh
+ */
 @Slf4j
-public class Http2ServerHandler extends ChannelDuplexHandler {
+public class Http2ProxyClientHandler extends ChannelDuplexHandler {
+    private final Channel serverChannel;
+    public Http2ProxyClientHandler(Channel serverChannel){
+        this.serverChannel=serverChannel;
+    }
     List<Object> objectList = new LinkedList<>();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         objectList.add(msg);
         log.info("Frame-name:"+((Http2Frame) msg).name());
-        //todo 方便调试
-        /*
-        if(msg instanceof Http2Frame){
-            String name = ((Http2Frame) msg).name();
-            log.info("Frame-name:"+name);
+        if(msg instanceof Http2SettingsFrame||msg instanceof Http2SettingsAckFrame){
+            //ctx.writeAndFlush(new )
+            return;
         }
-        if(msg instanceof Http2HeadersFrame){
-
+        if (serverChannel.isActive()) {
+            serverChannel.writeAndFlush(msg);
         }
-        if(msg instanceof Http2DataFrame){
-            boolean endStream = ((Http2DataFrame) msg).isEndStream();
-        }
-        if(msg instanceof Http2StreamFrame){
-
-        }*/
     }
 
     @Override

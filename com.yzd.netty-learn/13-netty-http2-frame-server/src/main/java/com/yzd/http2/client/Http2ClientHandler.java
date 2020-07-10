@@ -1,16 +1,16 @@
-package com.yzd.http2.server;
+package com.yzd.http2.client;
 
 import io.netty.buffer.ByteBufHolder;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http2.*;
+import io.netty.handler.codec.http2.Http2Frame;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
 import java.util.List;
 
 @Slf4j
-public class Http2ServerHandler extends ChannelDuplexHandler {
+public class Http2ClientHandler extends ChannelDuplexHandler {
     List<Object> objectList = new LinkedList<>();
 
     @Override
