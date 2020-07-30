@@ -20,6 +20,7 @@ public class ByteBufferTest {
     Charset charset = Charset.forName("utf-8");
     // 获取charset对象对应的编码器
     CharsetDecoder charsetDecoder = charset.newDecoder();
+
     @Test
     public void byteBufferTest() throws CharacterCodingException {
         ByteBuf buffer = Unpooled.buffer();
@@ -37,12 +38,66 @@ public class ByteBufferTest {
             buffer.release();
         }
     }
+
     public void releaseData(Object data) {
         if (data instanceof ReferenceCounted) {
-            ReferenceCounted referenceCounted = (ReferenceCounted)data;
+            ReferenceCounted referenceCounted = (ReferenceCounted) data;
             if (referenceCounted.refCnt() > 0) {
                 referenceCounted.release();
             }
+        }
+    }
+
+    //参考：HyperspaceHttp2Codec
+    private static final ByteBuf HTTP_1_X_BUF = Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer(
+            new byte[]{'H', 'T', 'T', 'P', '/', '1', '.'})).asReadOnly();
+    private static final ByteBuf CRLF = Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer(
+            new byte[]{'\n', '\r'})).asReadOnly();
+    private static final byte CR = 10;
+    private static final byte LF = 13;
+
+    /**
+     * byteBuf解析
+     * 判断是否以CRLF结尾
+     * byteBuf to bytes：将数据从内核缓冲区拷贝到用户空间缓冲区,之后系统调用 read 返回,会降低性能
+     */
+    @Test
+    public void byteBufferParseTest() {
+        ByteBuf buffer = Unpooled.buffer();
+        buffer.writeCharSequence((CharSequence) "te11111111111111\n\r", charset);
+        int i = buffer.readerIndex();
+        System.out.println(i);
+        int length = buffer.readableBytes();
+        System.out.println(length);
+        byte[] bytes = ByteBufUtil.getBytes(buffer);
+        for (byte aByte : bytes) {
+            System.out.println(aByte);
+        }
+        System.err.println("判断是否以CRLF结尾");
+        System.out.println("=========================");
+        int b = ByteBufUtil.indexOf(CRLF, buffer.setIndex(i, length));
+        System.out.println(b);
+        System.out.println("T1:是否以CRLF结尾:" + (length - b == 2));
+        System.out.println("=========================");
+        //int crIndex = ByteBufUtil.indexOf(buffer.slice(length-2,1), 1, 1, CR);
+        if (length >= 3) {
+            int crIndex = ByteBufUtil.indexOf(buffer, length - 1, length - 2, CR);
+            System.out.println(crIndex);
+            int lfIndex = ByteBufUtil.indexOf(buffer, length, length - 1, LF);
+            System.out.println(lfIndex);
+            if (length - lfIndex == 1 && length - crIndex == 2) {
+                System.out.println("T2:以CRLF结尾:TRUE");
+            }
+        }
+
+        System.out.println("=========================");
+        //byteBuf to bytes：将数据从内核缓冲区拷贝到用户空间缓冲区,之后系统调用 read 返回,会降低性能
+        byte[] newBytes = ByteBufUtil.getBytes(buffer, length - 2, 2);
+        for (byte newByte : newBytes) {
+            System.out.println(newByte);
+        }
+        if (newBytes[0] == CR && newBytes[1] == LF) {
+            System.out.println("T3:以CRLF结尾:TRUE");
         }
     }
 }
