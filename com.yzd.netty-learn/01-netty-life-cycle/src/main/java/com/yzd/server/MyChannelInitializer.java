@@ -1,5 +1,6 @@
 package com.yzd.server;
 
+import com.yzd.event.HandlerStateEventHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -29,5 +30,6 @@ public class MyChannelInitializer  extends ChannelInitializer<SocketChannel> {
         //ph.addLast(new HttpObjectAggregator(10*1024*1024));
         //自定义业务处理逻辑
         ph.addLast("handler", new LifeCycleTestHandler());
+        //ph.addLast("handlerStateEvent", new HandlerStateEventHandler());
     }
 }

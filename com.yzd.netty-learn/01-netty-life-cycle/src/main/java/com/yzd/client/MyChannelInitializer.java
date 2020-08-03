@@ -22,5 +22,6 @@ public class MyChannelInitializer  extends ChannelInitializer<SocketChannel> {
         //ph.addLast(new HttpObjectAggregator(10*1024*1024));
         //自定义业务处理逻辑
         ph.addLast("handler", new LifeCycleTestHandler());
+        ph.addLast("outboundHandler",new WriteListenerChannelDuplexHandler());
     }
 }
