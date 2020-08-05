@@ -73,6 +73,9 @@ public abstract class BaseResolverProvider implements ResolverProvider {
             updateNodeSet(newNodeSet);
             if (log.isDebugEnabled()) {
                 log.debug("NODE_SIZE:{}", nodeSet.size());
+                for (InetSocketAddress inetSocketAddress : newNodeSet) {
+                    log.debug(String.valueOf(inetSocketAddress));
+                }
             }
         }
     }
