@@ -7,6 +7,7 @@ import com.yzd.netty.resolver.k8s.entity.K8sServiceSubsets;
 import com.yzd.netty.resolver.utils.JsonUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ abstract class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
     protected final K8sResolverProvider resolverProvider;
     protected final RequestType requestType;
     protected final URI uri;
+    private boolean isReceiveMessage = false;
 
     public K8sResolverChannelHandler(K8sResolverProvider resolverProvider, RequestType requestType, URI uri) {
         this.resolverProvider = resolverProvider;
@@ -41,6 +43,11 @@ abstract class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
         if (resolverProvider.isClosed()) {
             return;
         }
+        if (!isReceiveMessage) {
+            resolverProvider.parseSuccess = false;
+            //没有收到任务消息。原因：可能k8s地址配置不正确
+            log.error("K8s resolver connection closed! resolver info({}),{}.", getResolverInfo(), "not received any message");
+        }
         if (!resolverProvider.parseSuccess) {
             resolverProvider.reconnection();
             return;
@@ -51,6 +58,15 @@ abstract class K8sResolverChannelHandler extends SimpleChannelInboundHandler {
         }
         resolverProvider.reconnection();
     }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if (msg instanceof HttpObject) {
+            isReceiveMessage = true;
+        }
+        super.channelRead(ctx, msg);
+    }
+
 
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
