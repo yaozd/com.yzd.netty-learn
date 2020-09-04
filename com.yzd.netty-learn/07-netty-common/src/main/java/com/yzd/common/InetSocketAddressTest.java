@@ -1,6 +1,7 @@
 package com.yzd.common;
 
 import cn.hutool.core.thread.ThreadUtil;
+import com.google.common.net.InetAddresses;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
@@ -10,6 +11,8 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 
+import static com.yzd.common.MethodUtil.methodExecuteTime;
+
 /**
  * @Author: yaozh
  * @Description:
@@ -18,15 +21,44 @@ public class InetSocketAddressTest {
     @Test
     public void inetSocketAddressTest() {
         //www.hualala.com/61.168.100.228:80
-        InetSocketAddress hostAddress = new InetSocketAddress("www.hualala.com", 80);
-        System.out.println(hostAddress.toString());
+        InetSocketAddress hostAddress = new InetSocketAddress("wwwa.hualala.com", 80);
+        System.out.println("A0:" + getIpAndPort(hostAddress));
+        System.out.println("A1:" + hostAddress.getAddress());
+        System.out.println("A2:" + hostAddress.getAddress().getHostAddress());
+        System.out.println("A3:" + hostAddress.toString());
+        System.out.println("B:" + InetAddresses.toAddrString(hostAddress.getAddress()));
         String ip = StringUtils.substringAfter(hostAddress.toString(), "/");
-        System.out.println(ip);
+        System.out.println("C:" + ip);
         ///127.0.0.1:80
         InetSocketAddress ipAddress = new InetSocketAddress("127.0.01", 80);
-        System.out.println(ipAddress.toString());
+        System.out.println("D:" + ipAddress.toString());
         String s = StringUtils.removeStart("111" + ipAddress.toString(), "/");
-        System.out.println(s);
+        System.out.println("E:" + s);
+
+    }
+
+    @Test
+    public void inetSocketAddressSpeedTest() {
+        //InetSocketAddress hostAddress = new InetSocketAddress("127.0.0.1", 80);
+        InetSocketAddress hostAddress = new InetSocketAddress("wwwa.hualala.com", 80);
+        System.out.println("A1:" + getIpAndPort(hostAddress) + " B1:" + hostAddress.toString());
+        for (int j = 0; j < 5; j++) {
+            methodExecuteTime(o -> {
+                for (int i = 0; i < 100000000; i++) {
+                    //4519ms | 4847ms
+                    getIpAndPort(hostAddress);
+                    //6422ms | 11660ms
+                    //hostAddress.toString();
+                }
+            });
+        }
+    }
+
+    private String getIpAndPort(InetSocketAddress hostAddress) {
+        if (hostAddress.getAddress() != null) {
+            return hostAddress.getAddress().getHostAddress() + ":" + hostAddress.getPort();
+        }
+        return hostAddress.toString();
     }
 
     /**
@@ -68,6 +100,7 @@ public class InetSocketAddressTest {
         }
 
     }
+
     public static void clearCache() throws NoSuchFieldException, IllegalAccessException {
         //修改缓存数据开始
         Class clazz = java.net.InetAddress.class;
@@ -79,7 +112,7 @@ public class InetSocketAddressTest {
         final Field cacheMapField = cacheClazz.getDeclaredField("cache");
         cachePolicyField.setAccessible(true);
         cacheMapField.setAccessible(true);
-        final Map cacheMap = (Map)cacheMapField.get(obj);
+        final Map cacheMap = (Map) cacheMapField.get(obj);
         System.out.println(cacheMap);
         cacheMap.remove("dns.test.hualala.com");
     }
