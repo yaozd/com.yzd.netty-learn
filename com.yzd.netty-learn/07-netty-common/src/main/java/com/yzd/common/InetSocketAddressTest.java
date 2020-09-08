@@ -2,12 +2,14 @@ package com.yzd.common;
 
 import cn.hutool.core.thread.ThreadUtil;
 import com.google.common.net.InetAddresses;
+import io.netty.channel.unix.DomainSocketAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 
@@ -54,11 +56,20 @@ public class InetSocketAddressTest {
         }
     }
 
-    private String getIpAndPort(InetSocketAddress hostAddress) {
-        if (hostAddress.getAddress() != null) {
-            return hostAddress.getAddress().getHostAddress() + ":" + hostAddress.getPort();
+    @Test
+    public void domainSocketAddressTest() {
+        DomainSocketAddress domainSocketAddress=new DomainSocketAddress("www.baidu.com");
+        System.out.println(domainSocketAddress.toString());
+    }
+    private String getIpAndPort(SocketAddress address) {
+        if(address instanceof InetSocketAddress){
+            InetSocketAddress hostAddress=(InetSocketAddress) address;
+            if (hostAddress.getAddress() != null) {
+                return hostAddress.getAddress().getHostAddress() + ":" + hostAddress.getPort();
+            }
+            return hostAddress.toString();
         }
-        return hostAddress.toString();
+        return String.valueOf(address);
     }
 
     /**
