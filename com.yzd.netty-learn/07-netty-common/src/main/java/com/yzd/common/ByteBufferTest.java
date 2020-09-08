@@ -3,6 +3,7 @@ package com.yzd.common;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCounted;
 import org.junit.Test;
 
@@ -20,6 +21,19 @@ public class ByteBufferTest {
     Charset charset = Charset.forName("utf-8");
     // 获取charset对象对应的编码器
     CharsetDecoder charsetDecoder = charset.newDecoder();
+
+    /**
+     * 读byteBuf
+     */
+    @Test
+    public void readByteBuf(){
+        ByteBuf buffer = Unpooled.buffer();
+        buffer.writeCharSequence( "te11111111111111111111111111111111111111111111111111111111111111111111111", charset);
+        //此方法在htt2 的grpc 解码中可以使用
+        //参考：HyperspaceHttp2Codec
+        String chunk = buffer.toString(0, buffer.capacity(), CharsetUtil.US_ASCII);
+        System.out.println(chunk);
+    }
 
     @Test
     public void byteBufferTest() throws CharacterCodingException {
