@@ -41,6 +41,7 @@ public class ByteBufferTest {
         buffer.writeCharSequence((CharSequence) "te11111111111111111111111111111111111111111111111111111111111111111111111", charset);
         int capacity = buffer.capacity();
         System.out.println(capacity);
+        ByteBufUtil.getBytes(buffer);
         ByteBuffer byteBuffer = buffer.nioBuffer();
         //byteBuffer.flip();
         // 将ByteBuffer的数据解码成字符序列
