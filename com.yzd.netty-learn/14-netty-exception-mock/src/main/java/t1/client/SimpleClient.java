@@ -34,6 +34,7 @@ public class SimpleClient {
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (future.isSuccess()) {
                     //todo 此解决方案有待验证
+                    //方案说明：将close关闭操作转变为一个独立执行的任务，可以把状态有效的进行隔离
                     /*future.channel().eventLoop().execute(()-> {
                         logger.info("close!关闭操作与主事件不在同一个处理流程，可以避免java.nio.channels.ClosedChannelException: null异常问题！");
                         future.channel().close();
@@ -54,5 +55,6 @@ public class SimpleClient {
                 }
             }
         });
+        logger.info("end");
     }
 }
