@@ -29,7 +29,7 @@ public class SimpleClient {
                     protected void initChannel(NioSocketChannel ch) throws Exception {
                     }
                 });
-        b.connect("localhost", 8090).addListener(new ChannelFutureListener() {
+        ChannelFuture channelFuture = b.connect("localhost", 8090).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (future.isSuccess()) {
@@ -49,9 +49,25 @@ public class SimpleClient {
                             }
                         }
                     });
+                    future.channel().writeAndFlush(Unpooled.buffer().writeBytes("456".getBytes())).addListener(new ChannelFutureListener() {
+                        @Override
+                        public void operationComplete(ChannelFuture future) throws Exception {
+                            if (!future.isSuccess()) {
+                                logger.error("Error_future.channel().writeAndFlush", future.cause());
+                            }
+                        }
+                    });
                     future.channel().flush();
-                }else {
+                } else {
                     logger.error("连接失败！");
+                }
+            }
+        });
+        channelFuture.channel().writeAndFlush(Unpooled.buffer().writeBytes("789".getBytes())).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                if (!future.isSuccess()) {
+                    logger.error("Error_channelFuture", future.cause());
                 }
             }
         });
