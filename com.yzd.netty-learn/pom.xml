@@ -46,6 +46,7 @@
         <module>13-netty-http2-frame</module>
         <module>13-netty-http2-frame-server</module>
         <module>14-netty-exception-mock</module>
+        <module>15-netty-token-tasks</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
