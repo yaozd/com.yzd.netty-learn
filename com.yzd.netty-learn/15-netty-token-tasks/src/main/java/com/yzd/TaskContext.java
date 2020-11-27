@@ -24,6 +24,15 @@ public class TaskContext {
         Iterator<AsynchronousTask> iterator = taskLinkedList.iterator();
         while (iterator.hasNext()) {
             AsynchronousTask next = iterator.next();
+            Boolean result = next.execute();
+            if (result == null) {
+                continue;
+            }
+            if(!result){
+                //todo 失败后业务逻辑处理
+                //
+                return true;
+            }
             if (next.execute()) {
                 iterator.remove();
             }

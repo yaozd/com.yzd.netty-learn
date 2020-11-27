@@ -13,7 +13,11 @@ public class AsynchronousTask {
     private Object param;
     private TaskFunction taskFunction;
 
-    public boolean execute() {
+    /**
+     * Boolean 有3个状态：null(未知)，true,false
+     * @return
+     */
+    public Boolean execute() {
         return taskFunction.check(param);
     }
 }

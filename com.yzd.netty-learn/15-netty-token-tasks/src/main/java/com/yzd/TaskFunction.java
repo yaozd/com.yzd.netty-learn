@@ -10,5 +10,5 @@ public interface TaskFunction {
      * @param param
      * @return
      */
-    boolean check(Object param);
+    Boolean check(Object param);
 }

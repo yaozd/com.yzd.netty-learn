@@ -6,7 +6,7 @@ package com.yzd;
  */
 public class TokenFunction implements TaskFunction {
     @Override
-    public boolean check(Object param) {
+    public Boolean check(Object param) {
         return false;
     }
 }
