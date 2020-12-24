@@ -41,6 +41,7 @@ public class SimpleClient {
                     });*/
                     //todo 默拟：java.nio.channels.ClosedChannelException: null
                     future.channel().close();
+                    logger.error("[{}]",future.channel().isOpen());
                     future.channel().write(Unpooled.buffer().writeBytes("123".getBytes())).addListener(new ChannelFutureListener() {
                         @Override
                         public void operationComplete(ChannelFuture future) throws Exception {
