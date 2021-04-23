@@ -26,9 +26,9 @@ public class ByteBufferTest {
      * 读byteBuf
      */
     @Test
-    public void readByteBuf(){
+    public void readByteBuf() {
         ByteBuf buffer = Unpooled.buffer();
-        buffer.writeCharSequence( "te11111111111111111111111111111111111111111111111111111111111111111111111", charset);
+        buffer.writeCharSequence("te11111111111111111111111111111111111111111111111111111111111111111111111", charset);
         //此方法在htt2 的grpc 解码中可以使用
         //参考：HyperspaceHttp2Codec
         String chunk = buffer.toString(0, buffer.capacity(), CharsetUtil.US_ASCII);
@@ -80,6 +80,13 @@ public class ByteBufferTest {
     public void byteBufferParseTest() {
         ByteBuf buffer = Unpooled.buffer();
         buffer.writeCharSequence((CharSequence) "te11111111111111\n\r", charset);
+        // ByteBuf 转为字符串方法
+        //T1
+        System.out.println(buffer.toString(0, buffer.capacity(), CharsetUtil.US_ASCII));
+        //T2
+        StringUtilExt stringUtilExt = new StringUtilExt();
+        System.out.println(stringUtilExt.convertByteBufToString2(buffer));
+        //
         int i = buffer.readerIndex();
         System.out.println(i);
         int length = buffer.readableBytes();
